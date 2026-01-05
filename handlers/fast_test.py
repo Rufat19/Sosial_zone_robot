@@ -51,6 +51,8 @@ FUN_FACTS = [
     "📜 Məhz bu cür gözəl botun ərsəyə gəlməsində böyük əziyyəti keçən Rüfət müəllim fərdi premiya və təşəkkürə layiqdir! 😊",
     "🤖 Sosial innovasiya: DOST mərkəzləri müasir texnologiyalardan istifadə edərək vətəndaşlara daha sürətli və effektiv xidmət göstərir.",
     "📌 Sosial Ödənişlərin Təyinatı üzrə Mərkəzi Filialda işləyən hörmətli Rüfət müəllim bu botun yaradılmasında böyük zəhmət çəkmişdir!",
+    "📌 Bilirsiniz mi? - 10 yaşına çatmış uşaq himayədar ailəyə verilən zaman onun razılığı alınır."
+    "📌 Bilirsiniz mi? - 7 yaşına çatmış uşaq himayədar ailəyə verilən zaman onun fikri pedaqoji işçinin və ya psixoloqun iştirakı ilə öyrənilir və nəzərə alınır"
 ]
 
 BONUS_VALUES = [0]

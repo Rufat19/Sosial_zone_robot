@@ -19,10 +19,10 @@ QUIZ_WORLD_TOPICS = [
 ]
 
 QUIZ_WORLD_LINKS = {
-    "quiz_world": "https://t.me/Allien_BiBot/DG1",
-    "quiz_world2": "https://t.me/Allien_BiBot/DG2",
-    "quiz_world3": "https://t.me/Allien_BiBot/DG3",
-    "quiz_world4": "https://t.me/Allien_BiBot/DG4",
+    "quiz_world": "https://wayground.com/pro/join/quiz/689268eb0948ddc0039469ab/start?studentShare=true",
+    "quiz_world2": "https://wayground.com/pro/join/quiz/688a15d9cffd60776542e57c/start?studentShare=true",
+    "quiz_world3": "https://wayground.com/pro/join/quiz/68a19900e677276cef66e8fb/start?studentShare=true",
+    "quiz_world4": "https://wayground.com/pro/join/quiz/68a198cacf5d2cb182633ca6/start?studentShare=true",
 }
 
 @router.callback_query(F.data == "quiz_world_menu")
