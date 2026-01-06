@@ -28,11 +28,11 @@ QUIZ_TOPICS = sorted([
 ], key=lambda x: x[0])
 
 QUIZ_LINKS = {
-    "quiz_pensiya": "https://t.me/Allien_BiBot/pensiya",
-    "quiz_müavinət": "https://t.me/Allien_BiBot/muavinet",
-    "quiz_təqaüd": "https://t.me/Allien_BiBot/kompensasiya",
-    "quiz_fərdi": "https://t.me/Allien_BiBot/personal",
-    "quiz_müraciətlər": "https://t.me/Allien_BiBot/request",
+    "quiz_pensiya": "https://t.me/Sosial_Zone_Robot/pensiya",
+    "quiz_müavinət": "https://t.me/Sosial_Zone_Robot/muavinet",
+    "quiz_təqaüd": "https://t.me/Sosial_Zone_Robot/kompensasiya",
+    "quiz_fərdi": "https://t.me/Sosial_Zone_Robot/personal",
+    "quiz_müraciətlər": "https://t.me/Sosial_Zone_Robot/request",
 }
 
 @router.callback_query(F.data == "quiz")
