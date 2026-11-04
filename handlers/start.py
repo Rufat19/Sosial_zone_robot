@@ -138,22 +138,7 @@ async def start_menu(message: Message, state: FSMContext):
     )
     await message.answer(greeting)
 
-    # 🔸 2. Qısa təqdimat videosu
-    try:
-        video = FSInputFile("media/about_bot.mp4")
-        await message.answer_video(
-            video,
-            caption=(
-                "<b>🎬 Qısa tanıtım</b>\n"
-                "Bu bot kim üçündür və nələr edə bilir?\n"
-                "<i>25 saniyəyə hər şey aydın olacaq. Səsi aç 😉</i>"
-            ),
-            parse_mode="HTML",
-        )
-    except Exception as e:
-        print(f"[VIDEO ERROR] {e}")
-
-    # 🔸 3. 2 saniyə gözləyir və əsas menyunu göstərir
+    # Əsas menyunu göstərir
     await asyncio.sleep(2)
 
     intro = "👇 İndi bir seçim edin — sürətli və rahat giriş üçün düymələr:"

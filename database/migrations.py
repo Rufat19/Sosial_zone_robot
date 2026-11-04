@@ -25,12 +25,13 @@ def _run_once(key, migrate):
         conn.execute("INSERT INTO storage_migrations (migration_key) VALUES (%s)", (key,))
 
 
-def _migrate_json(key, path, migrate):
+def _migrate_json(key, path, migrate, empty_value):
     if not os.path.isfile(path):
         return
     try:
         with open(path, "r", encoding="utf-8") as source:
-            data = json.load(source)
+            contents = source.read()
+        data = json.loads(contents) if contents.strip() else empty_value
         _run_once(key, lambda conn: migrate(conn, data))
         logger.info("Imported legacy data from %s", path)
     except Exception:
@@ -193,14 +194,23 @@ def _migrate_activity(conn, path):
 
 def migrate_legacy_data():
     _migrate_sqlite_database()
-    _migrate_json("user_balance_json", os.path.join(BASE_DIR, "user_balance.json"), _migrate_balances)
+    _migrate_json(
+        "user_balance_json", os.path.join(BASE_DIR, "user_balance.json"),
+        _migrate_balances, {},
+    )
     _migrate_json(
         "balance_history_json", os.path.join(DATA_DIR, "user_history.json"),
-        _migrate_balance_history,
+        _migrate_balance_history, {},
     )
-    _migrate_json("reviews_json", os.path.join(BASE_DIR, "reviews.json"), _migrate_reviews)
-    _migrate_json("bot_orders_json", os.path.join(BASE_DIR, "orders.json"), _migrate_bot_orders)
-    _migrate_json("news_json", os.path.join(DATA_DIR, "news.json"), _migrate_news)
+    _migrate_json(
+        "reviews_json", os.path.join(BASE_DIR, "reviews.json"), _migrate_reviews, [],
+    )
+    _migrate_json(
+        "bot_orders_json", os.path.join(BASE_DIR, "orders.json"), _migrate_bot_orders, [],
+    )
+    _migrate_json(
+        "news_json", os.path.join(DATA_DIR, "news.json"), _migrate_news, [],
+    )
     starts_path = os.path.join(BASE_DIR, "user_start_history.log")
     if os.path.isfile(starts_path):
         _run_once("user_starts_log", lambda conn: _migrate_starts(conn, starts_path))
