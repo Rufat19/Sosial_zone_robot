@@ -35,7 +35,6 @@ async def on_startup(bot: Bot):
 
         bot_chat_id = ADMIN_ID
         asyncio.create_task(background_tasks.send_regular_message(bot, bot_chat_id, interval=3600))
-        asyncio.create_task(background_tasks.monitor_new_users(bot, bot_chat_id))
         logger.info("Background tasks scheduled")
     except Exception as e:
         logger.exception(f"Failed to start background tasks: {e}")
