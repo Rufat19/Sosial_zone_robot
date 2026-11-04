@@ -3,8 +3,7 @@ from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-import json
-import os
+from database.db import get_db_connection
 
 router = Router()
 
@@ -30,33 +29,24 @@ async def main_menu_callback(callback: CallbackQuery, state: FSMContext):
         await callback.message.answer("Aşağıdakı seçimlərdən birini seçin və bütün funksiyalara rahat giriş əldə edin:", reply_markup=get_main_buttons())
     await callback.answer()
 
-REVIEWS_FILE = "reviews.json"
-
 class ReviewForm(StatesGroup):
     waiting_rating = State()
     waiting_text = State()
 
 def save_review(user_id, rating, text, username=None, full_name=None, reply=None):
-    reviews = []
-    if os.path.exists(REVIEWS_FILE):
-        with open(REVIEWS_FILE, "r", encoding="utf-8") as f:
-            reviews = json.load(f)
-    reviews.append({
-        "user_id": user_id,
-        "rating": rating,
-        "text": text,
-        "username": username,
-        "full_name": full_name,
-        "reply": reply
-    })
-    with open(REVIEWS_FILE, "w", encoding="utf-8") as f:
-        json.dump(reviews, f, ensure_ascii=False, indent=2)
+    with get_db_connection() as conn:
+        conn.execute(
+            """INSERT INTO reviews (user_id, rating, text, username, full_name, reply)
+               VALUES (%s, %s, %s, %s, %s, %s)""",
+            (user_id, rating, text, username, full_name, reply),
+        )
 
 def get_all_reviews():
-    if os.path.exists(REVIEWS_FILE):
-        with open(REVIEWS_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    return []
+    with get_db_connection() as conn:
+        return conn.execute(
+            """SELECT id, user_id, rating, text, username, full_name, reply
+               FROM reviews ORDER BY id"""
+        ).fetchall()
 
 @router.callback_query(F.data == "review")
 async def review_callback(callback: CallbackQuery, state: FSMContext):
@@ -156,11 +146,11 @@ async def process_admin_reply(message: Message, state: FSMContext):
     review_idx = data.get("review_idx")
     reviews = get_all_reviews()
     if review_idx is not None and isinstance(review_idx, int) and 0 <= review_idx < len(reviews):
-        reviews[review_idx]["reply"] = message.text
-        with open(REVIEWS_FILE, "w", encoding="utf-8") as f:
-            json.dump(reviews, f, ensure_ascii=False, indent=2)
+        review = reviews[review_idx]
+        with get_db_connection() as conn:
+            conn.execute("UPDATE reviews SET reply=%s WHERE id=%s", (message.text, review["id"]))
         # istifadəçiyə xəbər göndərək (əgər username/id varsa)
-        target = reviews[review_idx].get("user_id")
+        target = review.get("user_id")
         try:
             if target:
                 await message.bot.send_message(int(target), f"🗨️ Admin cavab verdi: {message.text}")

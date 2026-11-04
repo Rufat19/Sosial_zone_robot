@@ -2,7 +2,7 @@ from aiogram import Router, F
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, ContentType
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
-from config import ADMIN_ID, CARD_NUMBER, DB_PATH
+from config import ADMIN_ID, CARD_NUMBER
 from translations import get_text
 from database.db import get_db_connection
 
@@ -144,7 +144,9 @@ async def process_payment_proof(message: Message, state: FSMContext):
     with get_db_connection() as conn:
         with conn:
             conn.execute(
-                "INSERT INTO users (user_id, name, phone, username) VALUES (?, ?, ?, ?)",
+                     """INSERT INTO users (user_id, name, phone, username) VALUES (%s, %s, %s, %s)
+                         ON CONFLICT (user_id) DO UPDATE
+                         SET name=EXCLUDED.name, phone=EXCLUDED.phone, username=EXCLUDED.username""",
                 (user_id, data['name'], data['phone'], username)
             )
     await message.answer("✅ Qeydiyyat tamamlandı. Məlumat adminə göndərildi.")

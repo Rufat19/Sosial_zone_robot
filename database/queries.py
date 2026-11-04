@@ -1,77 +1,47 @@
-import os
-import json
-from config import BASE_DIR
-from .db import add_user as _sqlite_add_user, get_all_users as _sqlite_get_all_users
+from . import add_news_to_db, get_all_news as _db_get_all_news, get_news_by_id as _db_get_news_by_id
+from .db import get_all_users as _db_get_all_users
 
 # ========== İSTİFADƏÇİLƏR ÜÇÜN ==========
 def add_user(user_id: int, name: str, lang: str | None = None):
-    """Yeni istifadəçini lokal SQLite bazaya əlavə et.
-
-    Qeyd: 'lang' hazırda saxlanmır; gələcəkdə lazım olarsa, sxemə əlavə edilə bilər.
-    """
-    try:
-        _sqlite_add_user(user_id, name)
-    except Exception as e:
-        print(f"[WARN] add_user (SQLite) uğursuz: {e}")
+    from .db import get_db_connection
+    with get_db_connection() as conn:
+        conn.execute(
+            """INSERT INTO users (user_id, nickname, language) VALUES (%s, %s, %s)
+               ON CONFLICT (user_id) DO UPDATE
+               SET nickname=EXCLUDED.nickname, language=EXCLUDED.language""",
+            (user_id, name, lang),
+        )
 
 
 def get_all_users():
-    """Bütün istifadəçiləri göstər (SQLite)."""
-    try:
-        return _sqlite_get_all_users()
-    except Exception as e:
-        print(f"[WARN] get_all_users (SQLite) uğursuz: {e}")
-        return []
+    """Bütün istifadəçiləri PostgreSQL-dən göstər."""
+    return _db_get_all_users()
 
 
-# ========== YENİLİKLƏR ÜÇÜN (JSON SAXLAMA) ==========
-
-NEWS_FILE = os.path.join(BASE_DIR, "data", "news.json")
+# ========== YENİLİKLƏR ÜÇÜN ==========
 
 def load_news():
-    """news.json faylını oxuyur."""
-    if not os.path.exists(NEWS_FILE):
-        return []
-    try:
-        with open(NEWS_FILE, "r", encoding="utf-8") as f:
-            return json.load(f)
-    except Exception as e:
-        print(f"[WARN] load_news failed: {e}")
-        return []
+    return _db_get_all_news()
 
 
 def save_news(news_list):
-    """Yenilikləri news.json-a yazır."""
-    try:
-        os.makedirs(os.path.dirname(NEWS_FILE), exist_ok=True)
-        with open(NEWS_FILE, "w", encoding="utf-8") as f:
-            json.dump(news_list, f, ensure_ascii=False, indent=2)
-    except Exception as e:
-        print(f"[WARN] save_news failed: {e}")
+    from .db import get_db_connection
+    with get_db_connection() as conn:
+        conn.execute("DELETE FROM news")
+        for item in news_list:
+            conn.execute(
+                "INSERT INTO news (title, content) VALUES (%s, %s)",
+                (item.get("title", ""), item.get("content", "")),
+            )
 
 
 def add_news(title: str, content: str):
-    """Yeni yeniliyi əlavə et (lokal JSON saxlanma)."""
-    news_list = load_news()
-    new_id = max([n["id"] for n in news_list], default=0) + 1
-    news_list.append({
-        "id": new_id,
-        "title": title,
-        "content": content
-    })
-    save_news(news_list)
-    print(f"[INFO] Yeni yenilik əlavə olundu: {title}")
-    return new_id
+    return add_news_to_db(title, content, None)
 
 
 def get_all_news():
-    """Bütün yenilikləri al."""
-    return load_news()
+    return _db_get_all_news()
 
 
 def get_news_by_id(news_id: int):
-    """ID-ə görə konkret yeniliyi tap."""
-    for n in load_news():
-        if n["id"] == news_id:
-            return n
-    return None
+    return _db_get_news_by_id(news_id)

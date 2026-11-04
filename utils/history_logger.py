@@ -1,37 +1,7 @@
-import json
-import os
-from datetime import datetime
+from psycopg.types.json import Jsonb
+
+from database.db import get_db_connection
 from utils.timezone_utils import baku_now_for_history
-from config import DATA_DIR
-
-
-HISTORY_PATH = os.path.join(DATA_DIR, "user_history.json")
-
-
-def _ensure_dir():
-    os.makedirs(os.path.dirname(HISTORY_PATH), exist_ok=True)
-
-
-def _load_all():
-    if not os.path.exists(HISTORY_PATH):
-        return {}
-    try:
-        with open(HISTORY_PATH, "r", encoding="utf-8") as f:
-            return json.load(f) or {}
-    except Exception:
-        # If file is corrupted, back it up and start fresh
-        try:
-            backup = HISTORY_PATH + ".bak"
-            os.replace(HISTORY_PATH, backup)
-        except Exception:
-            pass
-        return {}
-
-
-def _save_all(data: dict):
-    _ensure_dir()
-    with open(HISTORY_PATH, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=2)
 
 
 def log_balance_change(user_id: int, prev_balance: int, new_balance: int, reason: str = None, source: str = None, meta: dict | None = None):
@@ -49,27 +19,46 @@ def log_balance_change(user_id: int, prev_balance: int, new_balance: int, reason
       "meta": { ... }
     }
     """
-    data = _load_all()
-    key = str(user_id)
-    events = data.get(key) or []
     delta = int(new_balance) - int(prev_balance)
-    events.append({
-        "ts": baku_now_for_history(),
-        "type": "balance_change",
-        "delta": delta,
-        "prev": int(prev_balance),
-        "new": int(new_balance),
-        "reason": reason,
-        "source": source or "db_utils.set_balance",
-        "meta": meta or {},
-    })
-    data[key] = events
-    _save_all(data)
+    with get_db_connection() as conn:
+        conn.execute(
+            """INSERT INTO balance_history
+               (user_id, ts, event_type, delta, prev_balance, new_balance, reason, source, meta)
+               VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s)""",
+            (
+                user_id,
+                baku_now_for_history(),
+                "balance_change",
+                delta,
+                int(prev_balance),
+                int(new_balance),
+                reason,
+                source or "db_utils.set_balance",
+                Jsonb(meta or {}),
+            ),
+        )
 
 
 def get_user_history(user_id: int) -> list:
-    data = _load_all()
-    return data.get(str(user_id), [])
+    with get_db_connection() as conn:
+        rows = conn.execute(
+            """SELECT ts, event_type, delta, prev_balance, new_balance, reason, source, meta
+               FROM balance_history WHERE user_id=%s ORDER BY id""",
+            (user_id,),
+        ).fetchall()
+    return [
+        {
+            "ts": row["ts"],
+            "type": row["event_type"],
+            "delta": row["delta"],
+            "prev": row["prev_balance"],
+            "new": row["new_balance"],
+            "reason": row["reason"],
+            "source": row["source"],
+            "meta": row["meta"],
+        }
+        for row in rows
+    ]
 
 
 def summarize_user_history(user_id: int) -> dict:

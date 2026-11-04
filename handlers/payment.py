@@ -55,7 +55,7 @@ async def payment_screenshot(message: Message):
     with get_db_connection() as conn:
         conn.execute("""
             INSERT INTO orders (user_id, name, phone, product_name, color, status)
-            VALUES (?, ?, ?, ?, ?, ?)
+            VALUES (%s, %s, %s, %s, %s, %s)
         """, (user_id, message.from_user.full_name, "Yox", caption, "Naməlum", "Ödəniş gözləyir"))
         conn.commit()
     

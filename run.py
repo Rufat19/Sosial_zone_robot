@@ -1,7 +1,6 @@
 import asyncio
-import os
 from aiogram import Bot, Dispatcher
-from config import BOT_TOKEN, ADMIN_ID, DB_PATH, APP_VERSION, REPO_NAME
+from config import BOT_TOKEN, ADMIN_ID, APP_VERSION, REPO_NAME
 from utils.logging_config import setup_logging, get_logger
 import background_tasks
 from handlers import (
@@ -9,8 +8,8 @@ from handlers import (
     order_bot, cert, balance, payment, review, pdf,
     news_handler, game, channel_access, misc
 )
-from handlers.db_utils import init_db
 from database.db import create_tables
+from database.migrations import migrate_legacy_data
 from database import get_all_news, add_news_to_db
 
 
@@ -48,16 +47,10 @@ async def main():
     logger = get_logger(__name__)
     logger.info("Program başladı")
 
-    # Database kataloqu
-    db_dir = os.path.dirname(DB_PATH)
-    if db_dir:
-        os.makedirs(db_dir, exist_ok=True)
-        logger.info(f"Database directory created/verified: {db_dir}")
-
     # Database inicializasiya
-    logger.info(f"Initializing database at: {DB_PATH}")
-    init_db()
+    logger.info("Initializing PostgreSQL database")
     create_tables()
+    migrate_legacy_data()
     logger.info("Database tables created successfully ✅")
     # Seed news if empty
     try:

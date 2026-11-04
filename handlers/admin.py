@@ -5,11 +5,11 @@ from aiogram.filters import Command
 from config import ADMIN_ID
 import datetime
 from collections import Counter
-import os
 from datetime import datetime, timedelta
 from aiogram.filters import CommandObject
 from utils.history_logger import get_user_history, summarize_user_history
 from utils.timezone_utils import get_baku_time_str, get_baku_time_short, get_baku_time
+from database.db import get_all_user_activity
 
 router = Router()
 
@@ -27,16 +27,8 @@ async def admin_panel(message: Message, state: FSMContext):
         return
 
     try:
-        # If the log file doesn't exist, create an empty one and inform admin
-        if not os.path.exists("user_activity.log"):
-            # create empty file to avoid future FileNotFoundError
-            open("user_activity.log", "w", encoding="utf-8").close()
-            await message.answer("Heç bir fəaliyyət qeydi yoxdur.")
-            return
-
-        with open("user_activity.log", "r", encoding="utf-8") as f:
-            lines = [l.strip() for l in f.readlines() if l.strip()]
-        if not lines:
+        rows = get_all_user_activity()
+        if not rows:
             await message.answer("Heç bir fəaliyyət qeydi yoxdur.")
             return
 
@@ -47,12 +39,12 @@ async def admin_panel(message: Message, state: FSMContext):
         user_activity_counter = Counter()
         # Track earliest seen date per user to compute new users in last 7 days
         earliest_seen = {}
-        for line in lines:
-            parts = line.split("|")
-            # tolerate malformed lines
-            if len(parts) < 5:
-                continue
-            user_id, username, action, date_str, lang = parts[:5]
+        for row in rows:
+            user_id = str(row["user_id"])
+            username = row["username"] or ""
+            action = row["action"] or ""
+            date_str = row["occurred_at"]
+            lang = row["language"] or "unknown"
             users.add(user_id)
             actions.append(action)
             langs.append(lang)
@@ -76,18 +68,19 @@ async def admin_panel(message: Message, state: FSMContext):
                     earliest_seen[user_id] = parsed_date
 
         total_users = len(users)
+        latest_activity = rows[-1]["occurred_at"]
         most_common_actions = Counter(actions).most_common(3)
         most_common_langs = Counter(langs).most_common(3)
         # Top 10 active users
         top_10_users = user_activity_counter.most_common(10)
         # New users in last 7 days (based on earliest_seen)
-        cutoff = get_baku_time() - timedelta(days=7)
+        cutoff = get_baku_time().replace(tzinfo=None) - timedelta(days=7)
         new_users_last_7 = sum(1 for d in earliest_seen.values() if d >= cutoff)
 
         text = (
             f"📊 <b>Admin Panel Hesabatı</b>\n"
             f"👥 Ümumi istifadəçilər: <b>{total_users}</b>\n"
-            f"📅 Son qeyd: <i>{lines[-1].split('|')[3]}</i>\n\n"
+            f"📅 Son qeyd: <i>{latest_activity}</i>\n\n"
             f"🔥 Ən çox əməl edilən fəaliyyətlər:\n"
         )
 

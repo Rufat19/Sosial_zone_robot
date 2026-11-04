@@ -5,6 +5,7 @@ import datetime
 import asyncio
 from database.queries import add_user
 from database import get_all_news, get_news_by_id
+from database.db import add_user_start
 from utils.logger_utils import log_event
 from utils.timezone_utils import get_baku_time_str
 from config import ADMIN_ID, APP_VERSION
@@ -35,9 +36,7 @@ async def channels_callback(callback: CallbackQuery, state: FSMContext):
 
 # İstifadəçi start tarixçəsini log fayla yazır
 def log_user_start(user_id):
-    with open("user_start_history.log", "a", encoding="utf-8") as f:
-        now = get_baku_time_str()
-        f.write(f"{user_id}|{now}\n")
+    add_user_start(user_id, get_baku_time_str())
 
 
 # Əsas menyu düymələri

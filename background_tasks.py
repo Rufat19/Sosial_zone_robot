@@ -3,33 +3,26 @@ import logging
 from aiogram import Bot
 from datetime import datetime, time, timedelta
 from utils.timezone_utils import get_baku_time
+from database.db import get_latest_user_start_id, get_user_starts_after
 
 logger = logging.getLogger(__name__)
 
 async def monitor_new_users(bot: Bot, admin_id: int):
     """
-    Hər 60 saniyədən bir user_start_history.log faylını yoxlayır
-    və yeni gələn istifadəçiləri adminə bildirir.
+    PostgreSQL-də yeni start qeydlərini yoxlayır və adminə bildirir.
     """
     logger.info("Yeni istifadəçilər üçün fon izləmə başladı.")
-    seen_users = set()
+    last_seen_id = get_latest_user_start_id()
 
     while True:
         try:
-            with open("user_start_history.log", "r", encoding="utf-8") as f:
-                lines = f.readlines()
-
-            for line in lines:
-                user_id, date = line.strip().split("|")
-                if user_id not in seen_users:
-                    seen_users.add(user_id)
-                    await bot.send_message(
-                        admin_id,
-                        f"🆕 Yeni istifadəçi botu işə saldı:\n<code>{user_id}</code> — {date}",
-                        parse_mode="HTML"
-                    )
-        except FileNotFoundError:
-            logger.warning("user_start_history.log tapılmadı.")
+            for entry in get_user_starts_after(last_seen_id):
+                await bot.send_message(
+                    admin_id,
+                    f"🆕 Yeni istifadəçi botu işə saldı:\n<code>{entry['user_id']}</code> — {entry['started_at']}",
+                    parse_mode="HTML"
+                )
+                last_seen_id = entry["id"]
         except Exception as e:
             logger.error(f"Monitor xətası: {e}")
 

@@ -21,15 +21,17 @@ class ExcelRegistration(StatesGroup):
 def has_excel_access(user_id):
     """Check if user has paid for Excel lessons access."""
     with get_db_connection() as conn:
-        row = conn.execute("SELECT access_granted FROM excel_access WHERE user_id = ?", (user_id,)).fetchone()
-        return row is not None and row[0] == 1
+        row = conn.execute("SELECT access_granted FROM excel_access WHERE user_id = %s", (user_id,)).fetchone()
+        return row is not None and row["access_granted"]
 
 def grant_excel_access(user_id, full_name, phone):
     """Grant Excel lessons access to user after payment."""
     with get_db_connection() as conn:
         conn.execute("""
-            INSERT OR REPLACE INTO excel_access (user_id, full_name, phone, access_granted)
-            VALUES (?, ?, ?, 1)
+            INSERT INTO excel_access (user_id, full_name, phone, access_granted)
+            VALUES (%s, %s, %s, TRUE)
+            ON CONFLICT (user_id) DO UPDATE
+            SET full_name=EXCLUDED.full_name, phone=EXCLUDED.phone, access_granted=TRUE
         """, (user_id, full_name, phone))
         conn.commit()
 

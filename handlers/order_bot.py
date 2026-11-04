@@ -9,6 +9,7 @@ from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from config import ADMIN_ID
 from handlers.balance_utils import get_balance, set_balance, add_balance
+from database.db import add_bot_order
 
 router = Router()
 
@@ -20,28 +21,7 @@ class OrderBotForm(StatesGroup):
 
 # --- köməkçi funksiya ---
 def save_order_to_file(user_id: int, full_name: str, phone: str, details: str):
-    order_data = {
-        "user_id": user_id,
-        "full_name": full_name,
-        "phone": phone,
-        "details": details,
-        "timestamp": get_baku_time_str()
-    }
-
-    file_path = "orders.json"
-    if os.path.exists(file_path):
-        with open(file_path, "r", encoding="utf-8") as f:
-            try:
-                orders = json.load(f)
-            except json.JSONDecodeError:
-                orders = []
-    else:
-        orders = []
-
-    orders.append(order_data)
-
-    with open(file_path, "w", encoding="utf-8") as f:
-        json.dump(orders, f, indent=4, ensure_ascii=False)
+    add_bot_order(user_id, full_name, phone, details, get_baku_time_str())
 
 
 # --- sifariş başlanğıcı ---

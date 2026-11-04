@@ -7,29 +7,18 @@
     logger.info("hazır")
 """
 import logging
-import os
 from typing import Optional
 from .logging_config import setup_logging
 import datetime
 from .timezone_utils import get_baku_time_str
+from database.db import add_user_activity
 
 LOG_FILE = "user_activity.log"
 
 
 def log_event(user_id: int, username: str, action: str, language: str = "unknown"):
     now = get_baku_time_str()
-    # ensure directory exists
-    os.makedirs(os.path.dirname(LOG_FILE) or ".", exist_ok=True)
-    # sanitize fields to avoid breaking the log format
-    def _clean(s: str) -> str:
-        return s.replace("|", " ").replace("\n", " ").strip()
-
-    u = _clean(str(username or ""))
-    a = _clean(str(action or ""))
-    l = _clean(str(language or "unknown"))
-
-    with open(LOG_FILE, "a", encoding="utf-8") as f:
-        f.write(f"{user_id}|{u}|{a}|{now}|{l}\n")
+    add_user_activity(user_id, username, action, now, language)
 
 
 def _parse_level(level_str: Optional[str]) -> int:

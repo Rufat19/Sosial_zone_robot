@@ -1,5 +1,3 @@
-import json
-import os
 import asyncio
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
@@ -11,7 +9,6 @@ from handlers.balance_utils import get_balance, set_balance, add_balance
 from handlers.start import get_main_buttons
 
 router = Router()
-BALANCE_FILE = "user_balance.json"
 
 @router.message(F.text == "/balance")
 async def balance_query(message: Message):
