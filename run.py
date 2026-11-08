@@ -1,4 +1,5 @@
 import asyncio
+import os
 from aiogram import Bot, Dispatcher
 from config import BOT_TOKEN, ADMIN_ID, APP_VERSION, REPO_NAME
 from utils.logging_config import setup_logging, get_logger
@@ -6,7 +7,7 @@ import background_tasks
 from handlers import (
     start, fast_test, about, admin, quiz, quiz_world,
     order_bot, cert, balance, payment, review, pdf,
-    news_handler, game, channel_access, misc
+    news_handler, channel_access, misc
 )
 from database.db import create_tables
 from database.migrations import migrate_legacy_data
@@ -74,7 +75,6 @@ async def main():
                         "content": (
                             "• Baş menyu 2 sütunlu olur\n"
                             "• RBCron qısayolları əlavə olundu\n"
-                            "• Köstəbək oyunu info və qrup dəvət düyməsi\n"
                             "• Rəylər siyahısı daha səliqəli"
                         ),
                     }
@@ -100,7 +100,7 @@ async def main():
         start.router, fast_test.router, about.router, admin.router,
         quiz.router, quiz_world.router, order_bot.router, cert.router,
         balance.router, payment.payment_router, review.router, pdf.router,
-        news_handler.router, game.router, channel_access.router, misc.misc_router
+        news_handler.router, channel_access.router, misc.misc_router
     ]:
         dp.include_router(router)
 

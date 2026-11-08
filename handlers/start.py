@@ -33,7 +33,6 @@ async def channels_callback(callback: CallbackQuery, state: FSMContext):
         await callback.message.answer("Kanala daxil olmaq üçün aşağıdakı düyməyə basın:", reply_markup=keyboard)
     await callback.answer()
 
-
 # İstifadəçi start tarixçəsini log fayla yazır
 def log_user_start(user_id):
     add_user_start(user_id, get_baku_time_str())
@@ -44,7 +43,6 @@ def get_main_buttons():
     rows = [
         [
             InlineKeyboardButton(text="⭐ Əmsal Oyunu", callback_data="fast_test_start"),
-            InlineKeyboardButton(text="🎮 Köstəbək Oyunu", callback_data="game_info"),
         ],
         [
             InlineKeyboardButton(text="🌐 Sosial Mühit", callback_data="channel_access_menu"),
@@ -198,35 +196,6 @@ async def balance_menu_callback(callback: CallbackQuery):
         "• Testlər, quizlər və digər ödəniş tələb edən bölmələrdə <b>endirimli istifadə</b>.\n"
         "• Kampaniya və xüsusi paketlər üçün hazır balans.\n\n"
         "👇 Aşağıdan seçim edin: balansınıza baxın və ya artırın."
-    )
-    await callback.message.answer(text, parse_mode="HTML", reply_markup=kb)
-    await callback.answer()
-
-
-# 🎮 Köstəbək oyunu haqqında məlumat (qısa yol)
-@router.callback_query(F.data == "game_info")
-async def game_info_callback(callback: CallbackQuery):
-    text = (
-        "🎮 <b>Köstəbək — komanda oyunu</b>\n"
-        "━━━━━━━━━━━━\n"
-        "• Qrupda <code>/game</code> yazın (bot admin olmalıdır).\n"
-        f"• Minimum <b>{3}</b> nəfər tələb olunur.\n"
-        "• Hamıya eyni söz, birinə fərqli söz düşür.\n"
-        "• Təsvir edin, şübhəlini tapın, səs verin!\n\n"
-        "😉 Eğlənmək üçün dostlarınızı dəvət edin!"
-    )
-    try:
-        me = await callback.bot.get_me()
-        username = getattr(me, "username", "")
-        startgroup_url = f"https://t.me/{username}?startgroup=true" if username else "https://t.me/"
-    except Exception:
-        startgroup_url = "https://t.me/"
-    kb = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="Qrupa əlavə et", url=startgroup_url)],
-            [InlineKeyboardButton(text="🎮 İctimai qrupda oyna", url="https://t.me/kostebeksen")],
-            [InlineKeyboardButton(text="🏠 Əsas menyuya qayıt", callback_data="main_menu")],
-        ]
     )
     await callback.message.answer(text, parse_mode="HTML", reply_markup=kb)
     await callback.answer()

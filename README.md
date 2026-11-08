@@ -4,7 +4,6 @@ Modern, çoxfunksiyalı Telegram botu (Aiogram v3) — oyunlar, yeniliklər, rə
 
 ## Xüsusiyyətlər
 
-- 🕹️ Köstəbək Oyunu (qrupda /game) — komanda ilə əyləncə, min. 3 nəfər
 - 🆕 Yeniliklər — admin əlavə edir, istifadəçilərə bildiriş gedir
 - 🌟 İstifadəçi rəyləri — ulduzla qiymətləndir, rəy yaz, admin cavab verə bilər
 - 💰 RBCron balansı — balansı göstər/artır, qəbz adminə təsdiq üçün gedir
@@ -41,7 +40,6 @@ python run.py
 ## İstifadəçi axınları (qısa)
 
 - `/start` (şəxsi mesaj): salam, qısa tanıtım videosu, iki sütunlu menyu
-- “Köstəbək Oyunu” (qısayol) → qrupda `/game` üçün yönləndirmə
 - “Yeniliklər” → başlıqlar siyahısı, oxu düyməsi
 - “Rəylər” → ulduz seç, rəy yaz, bütün rəylərə bax
 - “Balans” → balans göstər/artır; qəbz fotosu adminə gedir, təsdiqdən sonra artırılır
