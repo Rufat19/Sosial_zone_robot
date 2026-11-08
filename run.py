@@ -5,9 +5,9 @@ from config import BOT_TOKEN, ADMIN_ID, APP_VERSION, REPO_NAME
 from utils.logging_config import setup_logging, get_logger
 import background_tasks
 from handlers import (
-    start, fast_test, about, admin, quiz, quiz_world,
-    order_bot, cert, balance, payment, review,
-    news_handler, channel_access, misc
+    start, fast_test, about, admin,
+    order_bot, balance, payment,
+    news_handler, misc
 )
 from database.db import create_tables
 from database.migrations import migrate_legacy_data
@@ -75,7 +75,7 @@ async def main():
                         "content": (
                             "• Baş menyu 2 sütunlu olur\n"
                             "• RBCron qısayolları əlavə olundu\n"
-                            "• Rəylər siyahısı daha səliqəli"
+                            "• Menyu istifadəsi sadələşdirildi"
                         ),
                     }
                 ]
@@ -98,9 +98,8 @@ async def main():
     # Router-lar əlavə olunur
     for router in [
         start.router, fast_test.router, about.router, admin.router,
-        quiz.router, quiz_world.router, order_bot.router, cert.router,
-        balance.router, payment.payment_router, review.router,
-        news_handler.router, channel_access.router, misc.misc_router
+        order_bot.router, balance.router, payment.payment_router,
+        news_handler.router, misc.misc_router
     ]:
         dp.include_router(router)
 

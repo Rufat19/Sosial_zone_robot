@@ -75,17 +75,6 @@ def create_tables():
             )
         """)
         conn.execute("""
-            CREATE TABLE IF NOT EXISTS reviews (
-                id BIGSERIAL PRIMARY KEY,
-                user_id BIGINT,
-                rating INTEGER,
-                text TEXT NOT NULL,
-                username TEXT,
-                full_name TEXT,
-                reply TEXT
-            )
-        """)
-        conn.execute("""
             CREATE TABLE IF NOT EXISTS bot_orders (
                 id BIGSERIAL PRIMARY KEY,
                 user_id BIGINT NOT NULL,

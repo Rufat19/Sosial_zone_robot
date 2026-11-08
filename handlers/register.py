@@ -24,11 +24,7 @@ def get_buttons(lang):
             InlineKeyboardButton(text=get_text("feedback_btn", lang), callback_data="feedback")
         ],
         [
-            InlineKeyboardButton(text=get_text("contact_admin_btn", lang), callback_data="contact_admin"),
-            InlineKeyboardButton(text=get_text("channels_btn", lang), callback_data="channels")
-        ],
-        [
-            InlineKeyboardButton(text=get_text("about_channels_btn", lang), callback_data="about_channels")
+            InlineKeyboardButton(text=get_text("contact_admin_btn", lang), callback_data="contact_admin")
         ]
     ]
 
@@ -42,11 +38,7 @@ async def start_menu(message: Message, state: FSMContext):
                 InlineKeyboardButton(text="🌐 Dil dəyiş", callback_data="change_lang"),
                 InlineKeyboardButton(text="💬 Şikayət və təklif", callback_data="feedback")
             ],
-            [
-                InlineKeyboardButton(text="👤 Adminlə əlaqə", callback_data="contact_admin"),
-                InlineKeyboardButton(text="📢 Kanalların seçimi", callback_data="channels")
-            ],
-            [InlineKeyboardButton(text="ℹ Kanallar haqqında", callback_data="about_channels")]
+            [InlineKeyboardButton(text="👤 Adminlə əlaqə", callback_data="contact_admin")]
         ]
     )
     await message.answer(get_text("start_menu", "az"), reply_markup=keyboard)
@@ -209,14 +201,6 @@ async def contact_admin_callback(callback: CallbackQuery, state: FSMContext):
     if callback.message is not None:
         await callback.message.answer(text)
     await callback.answer()
-
-@register_router.callback_query(F.data == "channels")
-async def channels_callback(callback: CallbackQuery):
-    await callback.answer("Kanalların seçimi üçün seçimlər gələcək.")
-
-@register_router.callback_query(F.data == "about_channels")
-async def about_channels_callback(callback: CallbackQuery):
-    await callback.answer("Kanallar haqqında məlumat.")
 
 @register_router.message(F.text == "/test")
 async def test_command(message: Message, state: FSMContext):

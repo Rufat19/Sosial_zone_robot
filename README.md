@@ -1,16 +1,14 @@
 # Sosial Instruktor — Telegram Botu
 
-Modern, çoxfunksiyalı Telegram botu (Aiogram v3) — oyunlar, yeniliklər, rəy sistemi, faydalı kanallar və sadə balans idarəsi bir mərkəzdə.
+Modern, çoxfunksiyalı Telegram botu (Aiogram v3) — yeniliklər, investisiya testi, sifarişlər və RBCron balansı.
 
 ## Xüsusiyyətlər
 
 - 🆕 Yeniliklər — admin əlavə edir, istifadəçilərə bildiriş gedir
-- 🌟 İstifadəçi rəyləri — ulduzla qiymətləndir, rəy yaz, admin cavab verə bilər
 - 💰 RBCron balansı — balansı göstər/artır, qəbz adminə təsdiq üçün gedir
-- 🌐 Sosial Mühit kanalı — qısa təsvir, giriş və link dəstəyi
 - 🔔 Admin start bildirişi — hansı build-in işə düşdüyü görünür
 
-Arxitektura: Aiogram Router-ları (`handlers/*`) və PostgreSQL. Balanslar, ödənişlər, rəylər, sifarişlər və istifadəçi tarixçələri verilənlər bazasında saxlanılır.
+Arxitektura: Aiogram Router-ları (`handlers/*`) və PostgreSQL. Balanslar, ödənişlər, sifarişlər və istifadəçi tarixçələri verilənlər bazasında saxlanılır.
 
 ## Quraşdırma (lokal)
 
@@ -39,9 +37,7 @@ python run.py
 
 - `/start` (şəxsi mesaj): əsas menyunu açır
 - “Yeniliklər” → başlıqlar siyahısı, oxu düyməsi
-- “Rəylər” → ulduz seç, rəy yaz, bütün rəylərə bax
 - “Balans” → balans göstər/artır; qəbz fotosu adminə gedir, təsdiqdən sonra artırılır
-- “Sosial Mühit” → kanal haqqında məlumat və giriş
 
 ## Deploy (Railway)
 

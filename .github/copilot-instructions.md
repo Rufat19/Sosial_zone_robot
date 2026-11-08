@@ -6,8 +6,8 @@ This file gives focused, actionable guidance to an AI coding agent editing or ex
 - Configuration: `config.py` loads `BOT_TOKEN` and `ADMIN_ID` from environment (`.env` via python-dotenv). Changes that rely on credentials should use these env vars. If missing, `run.py` raises a ValueError.
 
 - Architecture overview:
-  - handlers/ : each feature is a Router module (e.g., `start.py`, `balance.py`, `review.py`). Add new features as independent routers and include them in `run.py` via `dp.include_router(...)`.
-  - database/ : lightweight SQLite helper in `database/db.py`. Use `get_db_connection()` and `create_tables()` for schema changes. Persisted JSON files (e.g. `user_balance.json`, `orders.json`, `reviews.json`) are used by some handlers for simple storage — prefer SQLite for cross-feature data.
+  - handlers/ : each active feature is a Router module (e.g., `start.py`, `balance.py`, `news_handler.py`). Add new features as independent routers and include them in `run.py` via `dp.include_router(...)`.
+  - database/ : PostgreSQL helper in `database/db.py`. Use `get_db_connection()` and `create_tables()` for schema changes.
 
 - Conventions & patterns to follow (concrete):
   - Routers: export `router = Router()` at module top. Handlers use `@router.message(...)` or `@router.callback_query(...)` with `aiogram.F` filters. Example: `handlers/start.py` defines `get_main_buttons()` and uses `@router.message(F.text == "/start")`.
@@ -27,7 +27,7 @@ This file gives focused, actionable guidance to an AI coding agent editing or ex
 
 - Common pitfalls & quick fixes observed in codebase:
   - `handlers/entry.py` may be empty — check for unused import attempts elsewhere before removing.
-  - Several handlers write/read JSON files directly (`user_balance.json`, `orders.json`, `reviews.json`). If adding concurrent writes, prefer migrating to SQLite to avoid race conditions.
+  - Balance and user histories are persisted in PostgreSQL; do not reintroduce local-file storage for persistent data.
   - `config.py` currently raises if `ADMIN_ID` not set; during tests you can set `ADMIN_ID` to a numeric test value.
 
 - When editing code, follow these micro-rules:

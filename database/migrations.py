@@ -136,19 +136,6 @@ def _migrate_balances(conn, balances):
         )
 
 
-def _migrate_reviews(conn, reviews):
-    for review in reviews or []:
-        conn.execute(
-            """INSERT INTO reviews (user_id, rating, text, username, full_name, reply)
-               VALUES (%s, %s, %s, %s, %s, %s)""",
-            (
-                review.get("user_id") if isinstance(review.get("user_id"), int) else None,
-                review.get("rating"), review.get("text", ""), review.get("username"),
-                review.get("full_name"), review.get("reply"),
-            ),
-        )
-
-
 def _migrate_bot_orders(conn, orders):
     for order in orders or []:
         conn.execute(
@@ -201,9 +188,6 @@ def migrate_legacy_data():
     _migrate_json(
         "balance_history_json", os.path.join(DATA_DIR, "user_history.json"),
         _migrate_balance_history, {},
-    )
-    _migrate_json(
-        "reviews_json", os.path.join(BASE_DIR, "reviews.json"), _migrate_reviews, [],
     )
     _migrate_json(
         "bot_orders_json", os.path.join(BASE_DIR, "orders.json"), _migrate_bot_orders, [],

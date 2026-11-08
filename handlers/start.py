@@ -21,18 +21,6 @@ async def _clear_notification_after_delay(user_id: int):
     _recent_admin_notifications.discard(user_id)
 
 
-# Kanal seçimi callback
-@router.callback_query(F.data == "channels")
-async def channels_callback(callback: CallbackQuery, state: FSMContext):
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="Sosial Mühit", callback_data="channel_sosial_muhit")]
-        ]
-    )
-    if callback.message is not None:
-        await callback.message.answer("Kanala daxil olmaq üçün aşağıdakı düyməyə basın:", reply_markup=keyboard)
-    await callback.answer()
-
 # İstifadəçi start tarixçəsini log fayla yazır
 def log_user_start(user_id):
     add_user_start(user_id, get_baku_time_str())
@@ -44,22 +32,9 @@ def get_main_buttons():
         [
             InlineKeyboardButton(text="📈 İnvestisiya Testi", callback_data="fast_test_start"),
         ],
-        [
-            InlineKeyboardButton(text="🌐 Sosial Mühit", callback_data="channel_access_menu"),
-            InlineKeyboardButton(text="🆕 Yeniliklər", callback_data="news_menu"),
-        ],
-        [
-            InlineKeyboardButton(text="🌍 Dünya Görüşü", callback_data="quiz_world_menu"),
-            InlineKeyboardButton(text="📋 Sosial ödənişlər", callback_data="quiz"),
-        ],
-        [
-            InlineKeyboardButton(text="📊 Power BI Təlimi", callback_data="cert_menu"),
-        ],
+        [InlineKeyboardButton(text="🆕 Yeniliklər", callback_data="news_menu")],
         [
             InlineKeyboardButton(text="💳 RBCron balansım", callback_data="balance_menu"),
-        ],
-        [
-            InlineKeyboardButton(text="🌟 İstifadəçi rəyləri", callback_data="reviews_menu"),
         ],
         [
             InlineKeyboardButton(text="🔧 Bot sifarişi", callback_data="order_bot"),
