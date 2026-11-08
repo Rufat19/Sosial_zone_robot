@@ -8,11 +8,10 @@ This file gives focused, actionable guidance to an AI coding agent editing or ex
 - Architecture overview:
   - handlers/ : each feature is a Router module (e.g., `start.py`, `balance.py`, `review.py`). Add new features as independent routers and include them in `run.py` via `dp.include_router(...)`.
   - database/ : lightweight SQLite helper in `database/db.py`. Use `get_db_connection()` and `create_tables()` for schema changes. Persisted JSON files (e.g. `user_balance.json`, `orders.json`, `reviews.json`) are used by some handlers for simple storage — prefer SQLite for cross-feature data.
-  - PDFs and static assets: `pdfs/` holds PDF resources referenced by handlers/pdf.py.
 
 - Conventions & patterns to follow (concrete):
   - Routers: export `router = Router()` at module top. Handlers use `@router.message(...)` or `@router.callback_query(...)` with `aiogram.F` filters. Example: `handlers/start.py` defines `get_main_buttons()` and uses `@router.message(F.text == "/start")`.
-  - Inline keyboards: return InlineKeyboardMarkup objects from helper functions (see `get_main_buttons()` in `handlers/start.py`). Keep callbacks short and consistent strings like `balance_menu`, `main_menu`, `get_pdf`.
+  - Inline keyboards: return InlineKeyboardMarkup objects from helper functions (see `get_main_buttons()` in `handlers/start.py`). Keep callbacks short and consistent strings like `balance_menu`, `main_menu`, `news_menu`.
   - DB access: use `database.db.get_db_connection()` which sets `row_factory=sqlite3.Row`. Use context managers (`with get_db_connection() as conn:`) and `conn.execute(...)` then `conn.commit()`.
   - Config and secrets: put BOT_TOKEN and other secrets into a `.env` file read by `config.py`.
 

@@ -1,5 +1,5 @@
 from aiogram import Router, F
-from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, FSInputFile
+from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from aiogram.fsm.context import FSMContext
 import datetime
 import asyncio
@@ -57,11 +57,9 @@ def get_main_buttons():
         ],
         [
             InlineKeyboardButton(text="💳 RBCron balansım", callback_data="balance_menu"),
-            InlineKeyboardButton(text="📄 PDF Yüklə", callback_data="get_pdf"),
         ],
         [
             InlineKeyboardButton(text="🌟 İstifadəçi rəyləri", callback_data="reviews_menu"),
-            InlineKeyboardButton(text="ℹ Qəbul Mərkəzləri", callback_data="about_bot"),
         ],
         [
             InlineKeyboardButton(text="🔧 Bot sifarişi", callback_data="order_bot"),

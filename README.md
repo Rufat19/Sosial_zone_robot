@@ -7,9 +7,7 @@ Modern, çoxfunksiyalı Telegram botu (Aiogram v3) — oyunlar, yeniliklər, rə
 - 🆕 Yeniliklər — admin əlavə edir, istifadəçilərə bildiriş gedir
 - 🌟 İstifadəçi rəyləri — ulduzla qiymətləndir, rəy yaz, admin cavab verə bilər
 - 💰 RBCron balansı — balansı göstər/artır, qəbz adminə təsdiq üçün gedir
-- 🎁 PDF hədiyyəsi — “Müsahibəyə hazırlıq texnikaları” faylı
 - 🌐 Sosial Mühit kanalı — qısa təsvir, giriş və link dəstəyi
-- ℹ️ DSMF/DOST haqqında məlumat blokları
 - 🔔 Admin start bildirişi — hansı build-in işə düşdüyü görünür
 
 Arxitektura: Aiogram Router-ları (`handlers/*`) və PostgreSQL. Balanslar, ödənişlər, rəylər, sifarişlər və istifadəçi tarixçələri verilənlər bazasında saxlanılır.
@@ -39,11 +37,10 @@ python run.py
 
 ## İstifadəçi axınları (qısa)
 
-- `/start` (şəxsi mesaj): salam, qısa tanıtım videosu, iki sütunlu menyu
+- `/start` (şəxsi mesaj): əsas menyunu açır
 - “Yeniliklər” → başlıqlar siyahısı, oxu düyməsi
 - “Rəylər” → ulduz seç, rəy yaz, bütün rəylərə bax
 - “Balans” → balans göstər/artır; qəbz fotosu adminə gedir, təsdiqdən sonra artırılır
-- “PDF” → hədiyyə sənədi bir düymə ilə
 - “Sosial Mühit” → kanal haqqında məlumat və giriş
 
 ## Deploy (Railway)
@@ -68,7 +65,6 @@ Qeydlər:
 - `run.py` — giriş nöqtəsi; router-ları qoşur, DB cədvəllərini yaradır, start bildirişi göndərir
 - `handlers/` — modul-modul xüsusiyyətlər
 - `database/` — PostgreSQL bağlantısı, sxem və birdəfəlik legacy data importu
-- `pdfs/` — PDF resursları
 - `media/` — video və media faylları
 
 ## Əlaqə

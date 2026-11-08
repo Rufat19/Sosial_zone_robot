@@ -6,7 +6,7 @@ from utils.logging_config import setup_logging, get_logger
 import background_tasks
 from handlers import (
     start, fast_test, about, admin, quiz, quiz_world,
-    order_bot, cert, balance, payment, review, pdf,
+    order_bot, cert, balance, payment, review,
     news_handler, channel_access, misc
 )
 from database.db import create_tables
@@ -99,7 +99,7 @@ async def main():
     for router in [
         start.router, fast_test.router, about.router, admin.router,
         quiz.router, quiz_world.router, order_bot.router, cert.router,
-        balance.router, payment.payment_router, review.router, pdf.router,
+        balance.router, payment.payment_router, review.router,
         news_handler.router, channel_access.router, misc.misc_router
     ]:
         dp.include_router(router)

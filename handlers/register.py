@@ -28,11 +28,7 @@ def get_buttons(lang):
             InlineKeyboardButton(text=get_text("channels_btn", lang), callback_data="channels")
         ],
         [
-            InlineKeyboardButton(text=get_text("about_channels_btn", lang), callback_data="about_channels"),
-            InlineKeyboardButton(text=get_text("get_pdf_btn", lang), callback_data="get_pdf")
-        ],
-        [
-            InlineKeyboardButton(text=get_text("about_bot_btn", lang), callback_data="about_bot")
+            InlineKeyboardButton(text=get_text("about_channels_btn", lang), callback_data="about_channels")
         ]
     ]
 
@@ -50,10 +46,7 @@ async def start_menu(message: Message, state: FSMContext):
                 InlineKeyboardButton(text="👤 Adminlə əlaqə", callback_data="contact_admin"),
                 InlineKeyboardButton(text="📢 Kanalların seçimi", callback_data="channels")
             ],
-            [
-                InlineKeyboardButton(text="ℹ Kanallar haqqında", callback_data="about_channels"),
-                InlineKeyboardButton(text="📄 PDF almaq", callback_data="get_pdf")
-            ]
+            [InlineKeyboardButton(text="ℹ Kanallar haqqında", callback_data="about_channels")]
         ]
     )
     await message.answer(get_text("start_menu", "az"), reply_markup=keyboard)
@@ -224,10 +217,6 @@ async def channels_callback(callback: CallbackQuery):
 @register_router.callback_query(F.data == "about_channels")
 async def about_channels_callback(callback: CallbackQuery):
     await callback.answer("Kanallar haqqında məlumat.")
-
-@register_router.callback_query(F.data == "get_pdf")
-async def get_pdf_callback(callback: CallbackQuery):
-    await callback.answer("PDF almaq üçün seçimlər gələcək.")
 
 @register_router.message(F.text == "/test")
 async def test_command(message: Message, state: FSMContext):
