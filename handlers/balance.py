@@ -88,7 +88,7 @@ async def fill_balance_callback(callback: CallbackQuery):
                 f"💰 Cari balansınız: <b>{balance}</b> RBCron\n\n"
                 "Ödəniş etdikdən sonra qəbzin şəklini bu söhbətə göndərin (foto).\n"
                 "Biz qəbzi nəzərdən keçirib, təsdiq etdikdə balansınızı artıracağıq — adətən 24 saat içində.\n\n"
-                "🙏 Təşəkkürlər! Hər hansı sualınız varsa, @Rufat19-a yazın."
+                "🙏 Təşəkkür edirik!"
             ),
             parse_mode="HTML"
         )

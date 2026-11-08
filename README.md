@@ -65,7 +65,4 @@ Qeydlər:
 - `database/` — PostgreSQL bağlantısı, sxem və birdəfəlik legacy data importu
 - `media/` — video və media faylları
 
-## Əlaqə
-Sual və ya təklif üçün: **@Rufat19**
-
 — Bu botu öz layihənə uyğun asanlıqla fərdiləşdirə bilərsən.

@@ -133,7 +133,7 @@ async def process_feedback(message: Message, state: FSMContext):
 
 @register_router.callback_query(F.data == "contact_admin")
 async def contact_admin_callback(callback: CallbackQuery, state: FSMContext):
-    text = "Adminlə əlaqə: @Rufat19"
+    text = "Adminlə əlaqə üçün bot vasitəsilə müraciət göndərin."
     if callback.message is not None:
         await callback.message.answer(text)
     await callback.answer()
