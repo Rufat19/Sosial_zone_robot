@@ -3,6 +3,7 @@ import os
 from aiogram import Bot, Dispatcher
 from config import BOT_TOKEN, ADMIN_ID, APP_VERSION, REPO_NAME
 from utils.logging_config import setup_logging, get_logger
+from utils.message_cleanup import delete_incoming_messages, delete_outgoing_messages
 import background_tasks
 from handlers import (
     start, fast_test, about, admin,
@@ -93,7 +94,9 @@ async def main():
         raise ValueError("BOT_TOKEN is not set!")
 
     bot = Bot(token=BOT_TOKEN)
+    bot.session.middleware.register(delete_outgoing_messages)
     dp = Dispatcher()
+    dp.message.outer_middleware(delete_incoming_messages)
 
     # Router-lar əlavə olunur
     for router in [

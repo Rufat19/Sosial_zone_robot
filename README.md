@@ -38,6 +38,7 @@ python run.py
 - `/start` (şəxsi mesaj): əsas menyunu açır
 - “İnvestisiya xəbərləri” → başlıqlar siyahısı, oxu düyməsi
 - “Balans” → balans göstər/artır; qəbz fotosu adminə gedir, təsdiqdən sonra artırılır
+- İstifadəçi və bot mesajları 5 dəqiqədən sonra avtomatik silinir; qruplarda istifadəçi mesajlarını silmək üçün bot admin icazəsinə malik olmalıdır
 - `/clearall` (yalnız admin): təsdiqdən sonra botun məlumat cədvəllərini təmizləyir; miqrasiya qeydləri saxlanılır ki, köhnə məlumatlar yenidən import olunmasın
 
 ## Deploy (Railway)
