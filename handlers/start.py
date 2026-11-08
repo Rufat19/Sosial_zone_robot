@@ -32,7 +32,7 @@ def get_main_buttons():
         [
             InlineKeyboardButton(text="📈 İnvestisiya Testi", callback_data="fast_test_start"),
         ],
-        [InlineKeyboardButton(text="🆕 Yeniliklər", callback_data="news_menu")],
+        [InlineKeyboardButton(text="📈 İnvestisiya xəbərləri", callback_data="news_menu")],
         [
             InlineKeyboardButton(text="💳 RBCron balansım", callback_data="balance_menu"),
         ],
@@ -115,7 +115,7 @@ async def news_menu_callback(callback: CallbackQuery):
         return
 
     if not news_list:
-        await callback.message.answer("📭 Hələ ki, yenilik yoxdur.")
+        await callback.message.answer("📭 Hələ ki, investisiya xəbəri yoxdur.")
         await callback.answer()
         return
 
@@ -125,7 +125,7 @@ async def news_menu_callback(callback: CallbackQuery):
             for n in news_list
         ]
     )
-    await callback.message.answer("🆕 Yeniliklər — son paylaşımlar:", reply_markup=kb)
+    await callback.message.answer("📈 İnvestisiya xəbərləri — son paylaşımlar:", reply_markup=kb)
     await callback.answer()
 
 
@@ -136,7 +136,7 @@ async def read_news_callback(callback: CallbackQuery):
         news_id = int(callback.data.split(":")[1])
         news = get_news_by_id(news_id)
         if not news:
-            await callback.message.answer("❌ Yenilik tapılmadı.")
+            await callback.message.answer("❌ İnvestisiya xəbəri tapılmadı.")
             return
 
         await callback.message.answer(

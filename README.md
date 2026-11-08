@@ -4,7 +4,7 @@ Modern, çoxfunksiyalı Telegram botu (Aiogram v3) — yeniliklər, investisiya 
 
 ## Xüsusiyyətlər
 
-- 🆕 Yeniliklər — admin əlavə edir, istifadəçilərə bildiriş gedir
+- 📈 İnvestisiya xəbərləri — admin əlavə edir, istifadəçilərə bildiriş gedir
 - 💰 RBCron balansı — balansı göstər/artır, qəbz adminə təsdiq üçün gedir
 - 🔔 Admin start bildirişi — hansı build-in işə düşdüyü görünür
 
@@ -36,8 +36,9 @@ python run.py
 ## İstifadəçi axınları (qısa)
 
 - `/start` (şəxsi mesaj): əsas menyunu açır
-- “Yeniliklər” → başlıqlar siyahısı, oxu düyməsi
+- “İnvestisiya xəbərləri” → başlıqlar siyahısı, oxu düyməsi
 - “Balans” → balans göstər/artır; qəbz fotosu adminə gedir, təsdiqdən sonra artırılır
+- `/clearall` (yalnız admin): təsdiqdən sonra botun məlumat cədvəllərini təmizləyir; miqrasiya qeydləri saxlanılır ki, köhnə məlumatlar yenidən import olunmasın
 
 ## Deploy (Railway)
 

@@ -1,4 +1,5 @@
 import psycopg
+from psycopg import sql
 from psycopg.rows import dict_row
 
 from config import DATABASE_URL
@@ -8,6 +9,23 @@ def get_db_connection():
     if not DATABASE_URL:
         raise RuntimeError("DATABASE_URL PostgreSQL bağlantısı təyin edilməyib.")
     return psycopg.connect(DATABASE_URL, row_factory=dict_row)
+
+
+def clear_all_data():
+    with get_db_connection() as conn:
+        rows = conn.execute(
+            """SELECT tablename FROM pg_tables
+               WHERE schemaname = current_schema()
+                 AND tablename <> 'storage_migrations'
+               ORDER BY tablename"""
+        ).fetchall()
+        tables = [row["tablename"] for row in rows]
+        if not tables:
+            return []
+
+        table_list = sql.SQL(", ").join(sql.Identifier(table) for table in tables)
+        conn.execute(sql.SQL("TRUNCATE TABLE {} RESTART IDENTITY CASCADE").format(table_list))
+        return tables
 
 
 def create_tables():

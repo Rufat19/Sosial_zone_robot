@@ -1,5 +1,5 @@
 from aiogram import Router, F
-from aiogram.types import Message
+from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import Command
 from config import ADMIN_ID
@@ -9,7 +9,7 @@ from datetime import datetime, timedelta
 from aiogram.filters import CommandObject
 from utils.history_logger import get_user_history, summarize_user_history
 from utils.timezone_utils import get_baku_time_str, get_baku_time_short, get_baku_time
-from database.db import get_all_user_activity
+from database.db import clear_all_data, get_all_user_activity
 
 router = Router()
 
@@ -111,6 +111,59 @@ async def admin_panel(message: Message, state: FSMContext):
     except Exception as e:
         await message.answer(f"Fəaliyyət qeydləri oxunarkən xəta baş verdi: {e}")
         return
+
+
+@router.message(Command("clearall"))
+async def clear_all_command(message: Message):
+    if not message.from_user or message.from_user.id != ADMIN_ID:
+        await message.answer("Bu əmr yalnız admin üçündür.")
+        return
+
+    keyboard = InlineKeyboardMarkup(
+        inline_keyboard=[
+            [
+                InlineKeyboardButton(text="🗑 Təsdiqlə", callback_data="clearall_confirm"),
+                InlineKeyboardButton(text="Ləğv et", callback_data="clearall_cancel"),
+            ]
+        ]
+    )
+    await message.answer(
+        "⚠️ Bu əməliyyat bütün istifadəçi məlumatlarını, balansları, tarixçələri, xəbərləri və sifarişləri siləcək.\n"
+        "Bu əməliyyatı geri qaytarmaq mümkün deyil. Davam etmək istəyirsiniz?",
+        reply_markup=keyboard,
+    )
+
+
+@router.callback_query(F.data == "clearall_confirm")
+async def clear_all_confirm(callback: CallbackQuery):
+    if callback.from_user.id != ADMIN_ID:
+        await callback.answer("Bu əməliyyat yalnız admin üçündür.", show_alert=True)
+        return
+
+    try:
+        tables = clear_all_data()
+    except Exception:
+        await callback.answer("Təmizləmə uğursuz oldu.", show_alert=True)
+        if callback.message:
+            await callback.message.answer("Verilənlər bazasını təmizləmək mümkün olmadı. Bağlantını yoxlayın.")
+        return
+
+    await callback.answer("Verilənlər bazası təmizləndi.")
+    if callback.message:
+        if tables:
+            await callback.message.answer(
+                f"✅ {len(tables)} cədvəlin məlumatı silindi. Miqrasiya qeydləri köhnə məlumatların yenidən yüklənməməsi üçün saxlanıldı."
+            )
+        else:
+            await callback.message.answer("Təmizlənəcək məlumat cədvəli tapılmadı.")
+
+
+@router.callback_query(F.data == "clearall_cancel")
+async def clear_all_cancel(callback: CallbackQuery):
+    if callback.from_user.id != ADMIN_ID:
+        await callback.answer("Bu əməliyyat yalnız admin üçündür.", show_alert=True)
+        return
+    await callback.answer("Təmizləmə ləğv edildi.")
 
 
 @router.message(Command(commands=["history"]))

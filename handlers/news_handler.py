@@ -118,7 +118,7 @@ async def read_news_cb(query: CallbackQuery):
     await query.answer()
 
 
-# 🔹 "Bütün yeniliklər" komandası
+# 🔹 İnvestisiya xəbərləri komandası
 @router.message(Command("news"))
 async def list_news(message: Message):
     try:
@@ -127,15 +127,15 @@ async def list_news(message: Message):
         news_list = local_news_cache
 
     if not news_list:
-        return await message.answer("📭 Hələlik yenilik yoxdur.")
+        return await message.answer("📭 Hələlik investisiya xəbəri yoxdur.")
 
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=n["title"], callback_data=f"read_news:{n['id']}")] for n in news_list
     ])
-    await message.answer("📰 Yeniliklər — seçin:", reply_markup=kb)
+    await message.answer("📈 İnvestisiya xəbərləri — seçin:", reply_markup=kb)
 
 
-# 🔹 "Yeniliklər" inline düyməsi (start.py-dən çağırmaq üçün)
+# 🔹 İnvestisiya xəbərlərinin inline düyməsi
 @router.callback_query(F.data == "show_news")
 async def show_news_from_inline(query: CallbackQuery):
     try:
@@ -144,10 +144,10 @@ async def show_news_from_inline(query: CallbackQuery):
         news_list = local_news_cache
 
     if not news_list:
-        return await query.answer("📭 Hələlik yenilik yoxdur.", show_alert=True)
+        return await query.answer("📭 Hələlik investisiya xəbəri yoxdur.", show_alert=True)
 
     kb = InlineKeyboardMarkup(inline_keyboard=[
         [InlineKeyboardButton(text=n["title"], callback_data=f"read_news:{n['id']}")] for n in news_list
     ])
-    await query.message.answer("📰 Bütün yeniliklər:", reply_markup=kb)
+    await query.message.answer("📈 İnvestisiya xəbərləri:", reply_markup=kb)
     await query.answer()
