@@ -30,14 +30,12 @@ def log_user_start(user_id):
 def get_main_buttons():
     rows = [
         [
-            InlineKeyboardButton(text="📈 İnvestisiya Testi", callback_data="fast_test_start"),
-        ],
-        [InlineKeyboardButton(text="📈 İnvestisiya xəbərləri", callback_data="news_menu")],
-        [
-            InlineKeyboardButton(text="💳 RBCron balansım", callback_data="balance_menu"),
+            InlineKeyboardButton(text="🧠 İnvestisiya testi", callback_data="fast_test_start"),
+            InlineKeyboardButton(text="🗞️ İnvestisiya xəbərləri", callback_data="news_menu"),
         ],
         [
-            InlineKeyboardButton(text="🔧 Bot sifarişi", callback_data="order_bot"),
+            InlineKeyboardButton(text="🪙 RBCron balansı", callback_data="balance_menu"),
+            InlineKeyboardButton(text="🤖 Bot sifarişi", callback_data="order_bot"),
         ],
     ]
     return InlineKeyboardMarkup(inline_keyboard=rows)
@@ -115,7 +113,7 @@ async def news_menu_callback(callback: CallbackQuery):
         return
 
     if not news_list:
-        await callback.message.answer("📭 Hələ ki, investisiya xəbəri yoxdur.")
+        await callback.message.answer("📭 Təzə xəbər yoxdur.")
         await callback.answer()
         return
 
@@ -125,7 +123,7 @@ async def news_menu_callback(callback: CallbackQuery):
             for n in news_list
         ]
     )
-    await callback.message.answer("📈 İnvestisiya xəbərləri — son paylaşımlar:", reply_markup=kb)
+    await callback.message.answer("📈 Faydalı xəbər — son paylaşımlar:", reply_markup=kb)
     await callback.answer()
 
 
@@ -162,13 +160,9 @@ async def balance_menu_callback(callback: CallbackQuery):
         ]
     )
     text = (
-        "💡 <b>RBCron nədir?</b>\n"
-        "RBCron — bot daxilində əməliyyat valyutasıdır. Testlər, quizlər, ödənişli kanallar və premium funksiyalarda istifadə olunur.\n\n"
-        "🎯 <b>Niyə balansı artırmaq sərfəlidir?</b>\n"
-        "• Çox yüklədikcə vahid qiymət <b>daha ucuz</b> olur.\n"
-        "• Testlər, quizlər və digər ödəniş tələb edən bölmələrdə <b>endirimli istifadə</b>.\n"
-        "• Kampaniya və xüsusi paketlər üçün hazır balans.\n\n"
-        "👇 Aşağıdan seçim edin: balansınıza baxın və ya artırın."
+        "💡 <b>RBCron balansı</b>\n"
+        "Investorlar qrupuna qoşulub real investorların faydalı məlumat və tövsiyələrindən yararlanmaq üçün balansınız olmalıdır.\n\n"
+        "👇 Balansınıza baxın və ya artırın."
     )
     await callback.message.answer(text, parse_mode="HTML", reply_markup=kb)
     await callback.answer()

@@ -26,10 +26,9 @@ async def send_receipt_to_admin(bot, user_id, photo_id):
         f"📥 Yeni ödəniş qəbzi\n"
         f"👤 İstifadəçi: {display} (id: {user_id})\n\n"
         "🔹 Mövcud paketlər:\n"
-        "• 100 RBCron — 3 AZN\n"
-        "• 250 RBCron — 5 AZN\n"
-        "• 750 RBCron — 10 AZN\n"
-        "• 1500 RBCron — 20 AZN\n\n"
+        "• 5 RBCron — $5\n"
+        "• 20 RBCron — $10\n"
+        "• 50 RBCron — $20\n\n"
         "👉 Altındakı düymələrdən istifadə edərək təsdiq və ya rədd edin."
     )
     await bot.send_photo(

@@ -82,11 +82,9 @@ async def fill_balance_callback(callback: CallbackQuery):
                 "💳 Balansı artırmaq üçün aşağıdakı karta ödəniş edin:\n\n"
                 f"<b>Kart nömrəsi</b>: <code>{CARD_NUMBER}</code>\n\n"
                 "🔹 <b>Paketlər</b>:\n"
-                "• 100 RBCron — 3 AZN\n"
-                "• 250 RBCron — 5 AZN\n"
-                "• 750 RBCron — 10 AZN\n"
-                "• 1500 RBCron — 20 AZN\n\n"
-                "💡 <i>Qeyd:</i> Daha böyük paketlərdə hər RBCron-un vahid qiyməti <b>daha sərfəlidir</b>.\n\n"
+                "• 5 RBCron — $5\n"
+                "• 20 RBCron — $10\n"
+                "• 50 RBCron — $20\n\n"
                 f"💰 Cari balansınız: <b>{balance}</b> RBCron\n\n"
                 "Ödəniş etdikdən sonra qəbzin şəklini bu söhbətə göndərin (foto).\n"
                 "Biz qəbzi nəzərdən keçirib, təsdiq etdikdə balansınızı artıracağıq — adətən 24 saat içində.\n\n"
@@ -196,8 +194,9 @@ async def main_menu_callback(callback: CallbackQuery, state: FSMContext):
 async def send_receipt_to_admin(bot, user_id, photo_id):
     keyboard = InlineKeyboardMarkup(
         inline_keyboard=[
-            [InlineKeyboardButton(text="100 ➕ (3 AZN)", callback_data=f"balance_confirm_{user_id}_100"), InlineKeyboardButton(text="250 ➕ (5 AZN)", callback_data=f"balance_confirm_{user_id}_250")],
-            [InlineKeyboardButton(text="750 ➕ (10 AZN)", callback_data=f"balance_confirm_{user_id}_750"), InlineKeyboardButton(text="1500 ➕ (20 AZN)", callback_data=f"balance_confirm_{user_id}_1500")],
+            [InlineKeyboardButton(text="5 RBCron — $5", callback_data=f"balance_confirm_{user_id}_5")],
+            [InlineKeyboardButton(text="20 RBCron — $10", callback_data=f"balance_confirm_{user_id}_20")],
+            [InlineKeyboardButton(text="50 RBCron — $20", callback_data=f"balance_confirm_{user_id}_50")],
             [InlineKeyboardButton(text="❌ Rədd et", callback_data=f"balance_reject_{user_id}")]
         ]
     )
@@ -213,10 +212,9 @@ async def send_receipt_to_admin(bot, user_id, photo_id):
         f"📥 Yeni ödəniş qəbzi\n"
         f"👤 İstifadəçi: {display} (id: {user_id})\n\n"
         "🔹 Mövcud paketlər:\n"
-        "• 100 RBCron — 3 AZN\n"
-        "• 250 RBCron — 5 AZN\n"
-        "• 750 RBCron — 10 AZN\n"
-        "• 1500 RBCron — 20 AZN\n\n"
+        "• 5 RBCron — $5\n"
+        "• 20 RBCron — $10\n"
+        "• 50 RBCron — $20\n\n"
         "👉 Qəbzin altından uyğun düyməni seçərək təsdiq edə və ya rədd edə bilərsiniz."
     )
     await bot.send_photo(
