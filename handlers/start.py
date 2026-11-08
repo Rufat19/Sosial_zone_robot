@@ -42,7 +42,7 @@ def log_user_start(user_id):
 def get_main_buttons():
     rows = [
         [
-            InlineKeyboardButton(text="⭐ Əmsal Oyunu", callback_data="fast_test_start"),
+            InlineKeyboardButton(text="📈 İnvestisiya Testi", callback_data="fast_test_start"),
         ],
         [
             InlineKeyboardButton(text="🌐 Sosial Mühit", callback_data="channel_access_menu"),
