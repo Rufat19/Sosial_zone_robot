@@ -130,19 +130,7 @@ async def start_menu(message: Message, state: FSMContext):
         except Exception as e:
             print(f"[LOG ERROR] {e}")
 
-    # 🔸 1. Səmimi salam və qısa izah
-    greeting = (
-        "👋 Salam! Xoş gəlmisiniz — burada istədiyiniz hər şey bir yerdə!\n\n"
-        "🧭 Quizlər, oyunlar, faydalı kanallar və balans əməliyyatları — hamısı asan istifadə üçün hazırlanıb.\n"
-        "Aşağıdan bir bölmə seçin, mən sizi yönləndirərəm!"
-    )
-    await message.answer(greeting)
-
-    # Əsas menyunu göstərir
-    await asyncio.sleep(2)
-
-    intro = "👇 İndi bir seçim edin — sürətli və rahat giriş üçün düymələr:"
-    await message.answer(intro, reply_markup=get_main_buttons())
+    await message.answer("Menyu:", reply_markup=get_main_buttons())
 
 
 # ✅ YENİLİKLƏR (lokal işlək versiya)
