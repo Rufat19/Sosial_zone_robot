@@ -1,6 +1,8 @@
 import psycopg
 from psycopg import sql
 from psycopg.rows import dict_row
+from psycopg.types.json import Jsonb
+from decimal import Decimal
 
 from config import DATABASE_URL
 
@@ -28,6 +30,21 @@ def clear_all_data():
         return tables
 
 
+def _ensure_money_column(conn, table, column):
+    row = conn.execute(
+        """SELECT data_type, numeric_scale FROM information_schema.columns
+           WHERE table_schema = current_schema() AND table_name = %s AND column_name = %s""",
+        (table, column),
+    ).fetchone()
+    if row and (row["data_type"] != "numeric" or row["numeric_scale"] != 2):
+        identifier = sql.Identifier
+        conn.execute(
+            sql.SQL("ALTER TABLE {} ALTER COLUMN {} TYPE NUMERIC(12, 2) USING {}::NUMERIC(12, 2)").format(
+                identifier(table), identifier(column), identifier(column)
+            )
+        )
+
+
 def create_tables():
     with get_db_connection() as conn:
         conn.execute("""
@@ -35,7 +52,7 @@ def create_tables():
                 user_id BIGINT PRIMARY KEY,
                 nickname TEXT,
                 score BIGINT NOT NULL DEFAULT 0,
-                balance BIGINT NOT NULL DEFAULT 0,
+                balance NUMERIC(12, 2) NOT NULL DEFAULT 0,
                 time_spent BIGINT NOT NULL DEFAULT 0,
                 name TEXT,
                 phone TEXT,
@@ -47,6 +64,7 @@ def create_tables():
         conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS phone TEXT")
         conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS username TEXT")
         conn.execute("ALTER TABLE users ADD COLUMN IF NOT EXISTS language TEXT")
+        _ensure_money_column(conn, "users", "balance")
         conn.execute("""
             CREATE TABLE IF NOT EXISTS orders (
                 id BIGSERIAL PRIMARY KEY,
@@ -84,12 +102,24 @@ def create_tables():
                 user_id BIGINT NOT NULL,
                 ts TEXT NOT NULL,
                 event_type TEXT NOT NULL,
-                delta BIGINT NOT NULL,
-                prev_balance BIGINT NOT NULL,
-                new_balance BIGINT NOT NULL,
+                delta NUMERIC(12, 2) NOT NULL,
+                prev_balance NUMERIC(12, 2) NOT NULL,
+                new_balance NUMERIC(12, 2) NOT NULL,
                 reason TEXT,
                 source TEXT,
                 meta JSONB NOT NULL DEFAULT '{}'::jsonb
+            )
+        """)
+        for column in ("delta", "prev_balance", "new_balance"):
+            _ensure_money_column(conn, "balance_history", column)
+        conn.execute("""
+            CREATE TABLE IF NOT EXISTS quiz_rewards (
+                user_id BIGINT NOT NULL,
+                quiz_id TEXT NOT NULL,
+                question_index INTEGER NOT NULL,
+                amount NUMERIC(12, 2) NOT NULL,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (user_id, quiz_id, question_index)
             )
         """)
         conn.execute("""
@@ -186,3 +216,42 @@ def add_bot_order(user_id, full_name, phone, details, created_at):
                VALUES (%s, %s, %s, %s, %s)""",
             (user_id, full_name, phone, details, created_at),
         )
+
+
+def award_quiz_reward(user_id: int, quiz_id: str, question_index: int, amount: Decimal):
+    with get_db_connection() as conn:
+        awarded = conn.execute(
+            """INSERT INTO quiz_rewards (user_id, quiz_id, question_index, amount)
+               VALUES (%s, %s, %s, %s)
+               ON CONFLICT (user_id, quiz_id, question_index) DO NOTHING
+               RETURNING user_id""",
+            (user_id, quiz_id, question_index, amount),
+        ).fetchone()
+        if not awarded:
+            return None
+
+        row = conn.execute(
+            """INSERT INTO users (user_id, balance) VALUES (%s, %s)
+               ON CONFLICT (user_id) DO UPDATE
+               SET balance = users.balance + EXCLUDED.balance
+               RETURNING balance""",
+            (user_id, amount),
+        ).fetchone()
+        new_balance = row["balance"]
+        previous_balance = new_balance - amount
+        conn.execute(
+            """INSERT INTO balance_history
+               (user_id, ts, event_type, delta, prev_balance, new_balance, reason, source, meta)
+               VALUES (%s, CURRENT_TIMESTAMP::text, %s, %s, %s, %s, %s, %s, %s)""",
+            (
+                user_id,
+                "quiz_reward",
+                amount,
+                previous_balance,
+                new_balance,
+                "Quiz sualına düzgün cavab mükafatı",
+                "handlers.fast_test.answer_handler",
+                Jsonb({"quiz_id": quiz_id, "question_index": question_index}),
+            ),
+        )
+        return new_balance

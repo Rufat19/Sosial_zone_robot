@@ -1,15 +1,14 @@
+import re
 from aiogram import Router, F
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery, ContentType
 from aiogram.fsm.context import FSMContext
 from aiogram.fsm.state import State, StatesGroup
 from config import ADMIN_ID, CARD_NUMBER
-from translations import get_text
 from database.db import get_db_connection
 
 register_router = Router()
 
 class RegisterForm(StatesGroup):
-    selecting_language = State()
     entering_name = State()
     entering_phone = State()
     awaiting_screenshot = State()
@@ -17,76 +16,37 @@ class RegisterForm(StatesGroup):
 class FeedbackForm(StatesGroup):
     waiting_feedback = State()
 
-def get_buttons(lang):
+def get_buttons():
     return [
+        [InlineKeyboardButton(text="💬 Şikayət və təklif", callback_data="feedback")],
         [
-            InlineKeyboardButton(text=get_text("change_lang_btn", lang), callback_data="change_lang"),
-            InlineKeyboardButton(text=get_text("feedback_btn", lang), callback_data="feedback")
-        ],
-        [
-            InlineKeyboardButton(text=get_text("contact_admin_btn", lang), callback_data="contact_admin")
+            InlineKeyboardButton(text="👤 Adminlə əlaqə", callback_data="contact_admin")
         ]
     ]
 
 @register_router.message(F.text == "/start")
 async def start_menu(message: Message, state: FSMContext):
-    from translations import get_text
-
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(text="🌐 Dil dəyiş", callback_data="change_lang"),
-                InlineKeyboardButton(text="💬 Şikayət və təklif", callback_data="feedback")
-            ],
-            [InlineKeyboardButton(text="👤 Adminlə əlaqə", callback_data="contact_admin")]
-        ]
+    await message.answer(
+        "Salam! Seçim edin:",
+        reply_markup=InlineKeyboardMarkup(inline_keyboard=get_buttons()),
     )
-    await message.answer(get_text("start_menu", "az"), reply_markup=keyboard)
     await state.clear()
-
-@register_router.callback_query(RegisterForm.selecting_language, F.data.startswith("lang_"))
-async def process_language_selection(callback: CallbackQuery, state: FSMContext):
-    if callback.data is not None:
-        lang = callback.data.split("_")[1]
-    else:
-        lang = "az"  # fallback to default language if callback.data is None
-    await state.update_data(lang=lang)
-    if callback.message is not None and callback.message.chat is not None:
-        bot = callback.bot if hasattr(callback, "bot") and callback.bot is not None else None
-        if bot is not None:
-            await bot.edit_message_reply_markup(
-                chat_id=callback.message.chat.id,
-                message_id=callback.message.message_id,
-                reply_markup=None
-            )
-    if callback.message is not None:
-        await callback.message.answer(get_text("language_selected", lang))
-    if callback.message is not None:
-        await callback.message.answer(get_text("start", lang))
-    if callback.message is not None:
-        await callback.message.answer(get_text("enter_name", lang))
-    await state.set_state(RegisterForm.entering_name)
 
 @register_router.message(RegisterForm.entering_name)
 async def get_name(message: Message, state: FSMContext):
-    data = await state.get_data()
-    lang = data.get("lang", "az")
     name = message.text.strip() if message.text else ""
     await state.update_data(name=name)
-    await message.answer(get_text("enter_phone", lang))
+    await message.answer("Telefon nömrənizi daxil edin (məsələn: +994501234567).")
     await state.set_state(RegisterForm.entering_phone)
 
 @register_router.message(RegisterForm.entering_phone)
 async def get_phone(message: Message, state: FSMContext):
-    data = await state.get_data()
-    lang = data.get("lang", "az")
     phone = message.text.strip() if message.text else ""
-    import re
     if not re.match(r"^\+994\d{9}$", phone):
-        await message.answer(get_text("invalid_phone", lang))
+        await message.answer("Telefon nömrəsi +994 ilə başlamalı və 9 rəqəm davam etməlidir.")
         return
     await state.update_data(phone=phone)
-    await message.answer(f"{get_text('payment_info', lang)}\n\n"
+    await message.answer("Ödənişi tamamlayın, sonra qəbzin şəklini göndərin.\n\n"
         f"💳 Kart nömrəsi: <b>{CARD_NUMBER}</b>\n\n"
         "✅ Ödənişi tamamladıqdan sonra screenshot/qəbzi bu çatda paylaşın.")
     await state.set_state(RegisterForm.awaiting_screenshot)
@@ -98,7 +58,6 @@ async def process_payment_proof(message: Message, state: FSMContext):
         return
     
     data = await state.get_data()
-    lang = data.get("lang", "az")
     if message.content_type != ContentType.PHOTO or not message.photo:
         await message.answer("❗ Zəhmət olmasa, yalnız ödəniş qəbzinin şəklini göndərin.")
         return
@@ -151,28 +110,11 @@ async def test_inline(message: Message):
 async def test_callback_handler(callback: CallbackQuery):
     await callback.answer("Test düyməsinə basdınız!")
 
-@register_router.callback_query(F.data == "change_lang")
-async def change_lang_callback(callback: CallbackQuery):
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [
-                InlineKeyboardButton(text="AZ🇦🇿", callback_data="lang_az"),
-                InlineKeyboardButton(text="RU🇷🇺", callback_data="lang_ru"),
-                InlineKeyboardButton(text="EN🇬🇧", callback_data="lang_en"),
-                InlineKeyboardButton(text="TR🇹🇷", callback_data="lang_tr")
-            ]
-        ]
-    )
-    if callback.message is not None:
-        await callback.message.answer("Dil seçin:", reply_markup=keyboard)
-    await callback.answer()
-
 @register_router.callback_query(F.data == "feedback")
 async def feedback_callback(callback: CallbackQuery, state: FSMContext):
-    data = await state.get_data()
-    lang = data.get("lang", "az")
     if callback.message:
-        await callback.message.answer(get_text("feedback_request", lang))
+        await callback.message.answer("Şikayət və ya təklifinizi yazın.")
+        await state.set_state(FeedbackForm.waiting_feedback)
     await callback.answer()
 
 @register_router.message(FeedbackForm.waiting_feedback)
@@ -191,24 +133,16 @@ async def process_feedback(message: Message, state: FSMContext):
 
 @register_router.callback_query(F.data == "contact_admin")
 async def contact_admin_callback(callback: CallbackQuery, state: FSMContext):
-    # Burada adminin username və ya əlaqə məlumatını göstərə bilərsən
-    admin_contact = "@Rufat19"  # Öz admin username-inizi yazın
-    data = await state.get_data()
-    lang = data.get("lang", "az")
-    text = get_text("admin_contact", lang)
-    if not text or text.strip() == "":
-        text = "Xəta: Mətn tapılmadı."
+    text = "Adminlə əlaqə: @Rufat19"
     if callback.message is not None:
         await callback.message.answer(text)
     await callback.answer()
 
 @register_router.message(F.text == "/test")
 async def test_command(message: Message, state: FSMContext):
-    data = await state.get_data()
-    lang = data.get("lang", "az")
-    await message.answer(get_text("istənilən_açar", lang))
+    await message.answer("Test əmri aktiv deyil.")
 
 @register_router.message(F.text == "/register")
 async def register_start(message: Message, state: FSMContext):
-    # Qeydiyyat prosesi üçün kodlar...
-    pass
+    await message.answer("Ad və soyadınızı daxil edin.")
+    await state.set_state(RegisterForm.entering_name)

@@ -1,10 +1,16 @@
 import random
+import logging
+import uuid
+from decimal import Decimal
 from aiogram import Router, F
 from aiogram.types import Message, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
 from aiogram.filters import Command
 from aiogram.fsm.context import FSMContext
+from database.db import award_quiz_reward
 
 router = Router()
+logger = logging.getLogger(__name__)
+QUIZ_REWARD = Decimal("0.05")
 
 
 # ===================== QUIZ SUALLARI =====================
@@ -76,7 +82,12 @@ async def start_quiz(message: Message, state: FSMContext):
     if message.chat.type != "private":
         return
     random_questions = random.sample(QUESTIONS, len(QUESTIONS))
-    await state.update_data(questions=random_questions, current=0, prev_msg_id=None)
+    await state.update_data(
+        questions=random_questions,
+        current=0,
+        prev_msg_id=None,
+        quiz_id=uuid.uuid4().hex,
+    )
     await send_question(message, state)
 
 async def send_question(message_or_callback, state: FSMContext):
@@ -129,6 +140,10 @@ async def answer_handler(callback: CallbackQuery, state: FSMContext):
         await state.clear()
         return
 
+    if qnum != data.get("current", 0):
+        await callback.answer("Bu sual artıq cavablandırılıb.", show_alert=True)
+        return
+
     # Validate qnum bounds
     if qnum < 0 or qnum >= len(questions):
         await callback.answer("Bu sual artıq etibarsızdır. Testi yenidən başlatmağı yoxlayın.", show_alert=True)
@@ -145,7 +160,29 @@ async def answer_handler(callback: CallbackQuery, state: FSMContext):
     prev_msg_id = data.get("prev_msg_id")
 
     if chosen == correct:
-        await callback.answer(f"✅ Doğru!\n{random.choice(FUN_FACTS)}", show_alert=True)
+        quiz_id = data.get("quiz_id") or uuid.uuid4().hex
+        if not data.get("quiz_id"):
+            await state.update_data(quiz_id=quiz_id)
+        try:
+            new_balance = award_quiz_reward(
+                callback.from_user.id,
+                quiz_id,
+                qnum,
+                QUIZ_REWARD,
+            )
+        except Exception:
+            logger.exception("Quiz mükafatını balansa əlavə etmək alınmadı")
+            await callback.answer("Mükafat hesaba yazılmadı. Yenidən cəhd edin.", show_alert=True)
+            return
+
+        if new_balance is None:
+            await callback.answer("Bu sualın mükafatı artıq verilib.", show_alert=True)
+        else:
+            await callback.answer(
+                f"✅ Düzgün! +{QUIZ_REWARD:.2f} RBCron\n"
+                f"Yeni balans: {new_balance:.2f} RBCron\n{random.choice(FUN_FACTS)}",
+                show_alert=True,
+            )
     else:
         correct_option = options[correct]
         await callback.answer(
@@ -169,5 +206,10 @@ async def answer_handler(callback: CallbackQuery, state: FSMContext):
 @router.callback_query(F.data == "fast_test_start")
 async def fast_test_start_callback(callback: CallbackQuery, state: FSMContext):
     random_questions = random.sample(QUESTIONS, len(QUESTIONS))
-    await state.update_data(questions=random_questions, current=0, prev_msg_id=None)
+    await state.update_data(
+        questions=random_questions,
+        current=0,
+        prev_msg_id=None,
+        quiz_id=uuid.uuid4().hex,
+    )
     await send_question(callback, state)

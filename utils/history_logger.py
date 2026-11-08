@@ -1,10 +1,12 @@
+from decimal import Decimal
+
 from psycopg.types.json import Jsonb
 
 from database.db import get_db_connection
 from utils.timezone_utils import baku_now_for_history
 
 
-def log_balance_change(user_id: int, prev_balance: int, new_balance: int, reason: str = None, source: str = None, meta: dict | None = None):
+def log_balance_change(user_id: int, prev_balance, new_balance, reason: str = None, source: str = None, meta: dict | None = None):
     """Append a balance change event for a user.
 
     Event shape:
@@ -19,7 +21,9 @@ def log_balance_change(user_id: int, prev_balance: int, new_balance: int, reason
       "meta": { ... }
     }
     """
-    delta = int(new_balance) - int(prev_balance)
+    previous_amount = Decimal(str(prev_balance)).quantize(Decimal("0.01"))
+    new_amount = Decimal(str(new_balance)).quantize(Decimal("0.01"))
+    delta = new_amount - previous_amount
     with get_db_connection() as conn:
         conn.execute(
             """INSERT INTO balance_history
@@ -30,8 +34,8 @@ def log_balance_change(user_id: int, prev_balance: int, new_balance: int, reason
                 baku_now_for_history(),
                 "balance_change",
                 delta,
-                int(prev_balance),
-                int(new_balance),
+                previous_amount,
+                new_amount,
                 reason,
                 source or "db_utils.set_balance",
                 Jsonb(meta or {}),
