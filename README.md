@@ -1,6 +1,6 @@
 # Sosial Instruktor — Telegram Botu
 
-Modern, çoxfunksiyalı Telegram botu (Aiogram v3) — yeniliklər, investisiya testi, sifarişlər və RBCron balansı.
+Modern, çoxfunksiyalı Telegram botu (Aiogram v3) — investisiya testi, investisiya xəbərləri və RBCron balansı.
 
 ## Xüsusiyyətlər
 
@@ -8,7 +8,7 @@ Modern, çoxfunksiyalı Telegram botu (Aiogram v3) — yeniliklər, investisiya 
 - 💰 RBCron balansı — balansı göstər/artır, qəbz adminə təsdiq üçün gedir
 - 🔔 Admin start bildirişi — hansı build-in işə düşdüyü görünür
 
-Arxitektura: Aiogram Router-ları (`handlers/*`) və PostgreSQL. Balanslar, ödənişlər, sifarişlər və istifadəçi tarixçələri verilənlər bazasında saxlanılır.
+Arxitektura: Aiogram Router-ları (`handlers/*`) və PostgreSQL. Balanslar, ödəniş qəbzləri, xəbərlər və istifadəçi tarixçələri verilənlər bazasında saxlanılır.
 
 ## Quraşdırma (lokal)
 

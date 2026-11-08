@@ -7,7 +7,7 @@ from utils.message_cleanup import delete_incoming_messages, delete_outgoing_mess
 import background_tasks
 from handlers import (
     start, fast_test, about, admin,
-    order_bot, balance, payment,
+    balance, payment,
     news_handler, misc
 )
 from database.db import create_tables
@@ -101,7 +101,7 @@ async def main():
     # Router-lar əlavə olunur
     for router in [
         start.router, fast_test.router, about.router, admin.router,
-        order_bot.router, balance.router, payment.payment_router,
+        balance.router, payment.payment_router,
         news_handler.router, misc.misc_router
     ]:
         dp.include_router(router)

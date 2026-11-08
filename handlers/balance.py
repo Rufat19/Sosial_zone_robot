@@ -5,7 +5,7 @@ from config import CARD_NUMBER, ADMIN_ID
 from aiogram.fsm.context import FSMContext
 from aiogram.filters import StateFilter
 from handlers.payment import send_receipt_to_admin
-from handlers.balance_utils import get_balance, set_balance, add_balance
+from handlers.balance_utils import get_balance, add_balance
 from handlers.start import get_main_buttons
 
 router = Router()
@@ -24,40 +24,6 @@ async def balance_query(message: Message):
         ]
     )
     await message.answer(f"💰 Sənin balansın: <b>{balance}</b> RBCron — nə etmək istəyirsən?", parse_mode="HTML", reply_markup=keyboard)
-
-@router.message(StateFilter("waiting_recipient_id"))
-async def recipient_id_handler(message: Message, state: FSMContext):
-    recipient_id = message.text.strip()
-    if not recipient_id.isdigit():
-        await message.answer("Yanlış ID daxil edildi. Zəhmət olmasa, düzgün Telegram ID daxil edin.")
-        return
-    sender_id = message.from_user.id
-    if int(recipient_id) == sender_id:
-        await message.answer("Özünüzə göndərə bilməzsiniz.")
-        return
-    balance = get_balance(sender_id)
-    if balance < 10:
-        await message.answer("Balansınız kifayət etmir.")
-        await state.clear()
-        return
-    await state.update_data(recipient_id=int(recipient_id))
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="Təsdiqlə və göndər", callback_data="confirm_send_rbcrypt")],
-            [InlineKeyboardButton(text="Ləğv et", callback_data="cancel_send_rbcrypt")],
-            [InlineKeyboardButton(text="🏠 Əsas menyuya qayıt", callback_data="main_menu")],
-        ]
-    )
-    await message.answer(f"{recipient_id} ID-li istifadəçiyə 10 RBCron göndərmək istəyirsiniz?", reply_markup=keyboard)
-    await state.set_state("waiting_send_confirm")
-
-@router.callback_query(F.data == "confirm_send_rbcrypt")
-async def confirm_send_rbcrypt_callback(callback: CallbackQuery, state: FSMContext):
-    pass
-
-@router.callback_query(F.data == "cancel_send_rbcrypt")
-async def cancel_send_rbcrypt_callback(callback: CallbackQuery, state: FSMContext):
-    pass
 
 @router.callback_query(F.data == "show_balance")
 async def show_balance_callback(callback: CallbackQuery):
@@ -97,11 +63,6 @@ async def fill_balance_callback(callback: CallbackQuery):
 class BalanceForm:
     waiting_receipt = "waiting_receipt"
     waiting_reject_reason = "waiting_reject_reason"
-
-@router.message(F.text.regexp(r"^\d+$").as_("amount"))
-async def deposit_amount(message: Message, state: FSMContext):
-    # Əgər ayrıca məbləğ istəsəniz, bu handleri istifadə edə bilərsiniz
-    pass
 
 @router.message(F.text == "Qəbz göndər")
 async def ask_receipt(message: Message, state: FSMContext):

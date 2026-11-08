@@ -88,19 +88,6 @@ def _migrate_sqlite_database():
                         tuple(news.get(field) for field in ("title", "content", "admin_id", "created_at")),
                     )
 
-            if "excel_access" in tables:
-                for row in legacy.execute("SELECT * FROM excel_access"):
-                    access = dict(row)
-                    conn.execute(
-                        """INSERT INTO excel_access (user_id, full_name, phone, access_granted)
-                           VALUES (%s, %s, %s, %s)
-                           ON CONFLICT (user_id) DO NOTHING""",
-                        (
-                            access["user_id"], access.get("full_name"), access.get("phone"),
-                            bool(access.get("access_granted", False)),
-                        ),
-                    )
-
     _run_once("sqlite_database", migrate)
     logger.info("Imported legacy SQLite database from %s", LEGACY_DB_PATH)
 
@@ -136,35 +123,12 @@ def _migrate_balances(conn, balances):
         )
 
 
-def _migrate_bot_orders(conn, orders):
-    for order in orders or []:
-        conn.execute(
-            """INSERT INTO bot_orders (user_id, full_name, phone, details, created_at)
-               VALUES (%s, %s, %s, %s, %s)""",
-            (
-                int(order["user_id"]), order.get("full_name"), order.get("phone"),
-                order.get("details"), order.get("timestamp"),
-            ),
-        )
-
-
 def _migrate_news(conn, items):
     for item in items or []:
         conn.execute(
             "INSERT INTO news (title, content) VALUES (%s, %s)",
             (item.get("title", ""), item.get("content", "")),
         )
-
-
-def _migrate_starts(conn, path):
-    with open(path, "r", encoding="utf-8") as source:
-        for line in source:
-            user_id, separator, started_at = line.strip().partition("|")
-            if separator and user_id.isdigit():
-                conn.execute(
-                    "INSERT INTO user_starts (user_id, started_at) VALUES (%s, %s)",
-                    (int(user_id), started_at),
-                )
 
 
 def _migrate_activity(conn, path):
@@ -190,14 +154,8 @@ def migrate_legacy_data():
         _migrate_balance_history, {},
     )
     _migrate_json(
-        "bot_orders_json", os.path.join(BASE_DIR, "orders.json"), _migrate_bot_orders, [],
-    )
-    _migrate_json(
         "news_json", os.path.join(DATA_DIR, "news.json"), _migrate_news, [],
     )
-    starts_path = os.path.join(BASE_DIR, "user_start_history.log")
-    if os.path.isfile(starts_path):
-        _run_once("user_starts_log", lambda conn: _migrate_starts(conn, starts_path))
     activity_path = os.path.join(BASE_DIR, "user_activity.log")
     if os.path.isfile(activity_path):
         _run_once("user_activity_log", lambda conn: _migrate_activity(conn, activity_path))

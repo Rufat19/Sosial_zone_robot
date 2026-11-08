@@ -87,16 +87,6 @@ def create_tables():
             )
         """)
         conn.execute("""
-            CREATE TABLE IF NOT EXISTS excel_access (
-                user_id BIGINT PRIMARY KEY,
-                full_name TEXT,
-                phone TEXT,
-                access_granted BOOLEAN NOT NULL DEFAULT FALSE
-            )
-        """)
-        conn.execute("ALTER TABLE excel_access ADD COLUMN IF NOT EXISTS full_name TEXT")
-        conn.execute("ALTER TABLE excel_access ADD COLUMN IF NOT EXISTS phone TEXT")
-        conn.execute("""
             CREATE TABLE IF NOT EXISTS balance_history (
                 id BIGSERIAL PRIMARY KEY,
                 user_id BIGINT NOT NULL,
@@ -120,23 +110,6 @@ def create_tables():
                 amount NUMERIC(12, 2) NOT NULL,
                 created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP,
                 PRIMARY KEY (user_id, quiz_id, question_index)
-            )
-        """)
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS bot_orders (
-                id BIGSERIAL PRIMARY KEY,
-                user_id BIGINT NOT NULL,
-                full_name TEXT,
-                phone TEXT,
-                details TEXT,
-                created_at TEXT
-            )
-        """)
-        conn.execute("""
-            CREATE TABLE IF NOT EXISTS user_starts (
-                id BIGSERIAL PRIMARY KEY,
-                user_id BIGINT NOT NULL,
-                started_at TEXT NOT NULL
             )
         """)
         conn.execute("""
@@ -171,28 +144,6 @@ def get_all_users():
         return [dict(row) for row in rows]
 
 
-def add_user_start(user_id, started_at):
-    with get_db_connection() as conn:
-        conn.execute(
-            "INSERT INTO user_starts (user_id, started_at) VALUES (%s, %s)",
-            (user_id, started_at),
-        )
-
-
-def get_latest_user_start_id():
-    with get_db_connection() as conn:
-        row = conn.execute("SELECT COALESCE(MAX(id), 0) AS id FROM user_starts").fetchone()
-        return row["id"]
-
-
-def get_user_starts_after(start_id):
-    with get_db_connection() as conn:
-        return conn.execute(
-            "SELECT id, user_id, started_at FROM user_starts WHERE id > %s ORDER BY id",
-            (start_id,),
-        ).fetchall()
-
-
 def add_user_activity(user_id, username, action, occurred_at, language):
     with get_db_connection() as conn:
         conn.execute(
@@ -207,15 +158,6 @@ def get_all_user_activity():
         return conn.execute(
             "SELECT user_id, username, action, occurred_at, language FROM user_activity ORDER BY id"
         ).fetchall()
-
-
-def add_bot_order(user_id, full_name, phone, details, created_at):
-    with get_db_connection() as conn:
-        conn.execute(
-            """INSERT INTO bot_orders (user_id, full_name, phone, details, created_at)
-               VALUES (%s, %s, %s, %s, %s)""",
-            (user_id, full_name, phone, details, created_at),
-        )
 
 
 def award_quiz_reward(user_id: int, quiz_id: str, question_index: int, amount: Decimal):

@@ -1,11 +1,9 @@
 from aiogram import Router, F
 from aiogram.types import Message, InlineKeyboardMarkup, InlineKeyboardButton, CallbackQuery
 from aiogram.fsm.context import FSMContext
-import datetime
 import asyncio
 from database.queries import add_user
 from database import get_all_news, get_news_by_id
-from database.db import add_user_start
 from utils.logger_utils import log_event
 from utils.timezone_utils import get_baku_time_str
 from config import ADMIN_ID, APP_VERSION
@@ -21,11 +19,6 @@ async def _clear_notification_after_delay(user_id: int):
     _recent_admin_notifications.discard(user_id)
 
 
-# İstifadəçi start tarixçəsini log fayla yazır
-def log_user_start(user_id):
-    add_user_start(user_id, get_baku_time_str())
-
-
 # Əsas menyu düymələri
 def get_main_buttons():
     rows = [
@@ -35,7 +28,6 @@ def get_main_buttons():
         ],
         [
             InlineKeyboardButton(text="🪙 RBCron balansı", callback_data="balance_menu"),
-            InlineKeyboardButton(text="🤖 Bot sifarişi", callback_data="order_bot"),
         ],
     ]
     return InlineKeyboardMarkup(inline_keyboard=rows)
@@ -60,8 +52,6 @@ async def start_menu(message: Message, state: FSMContext):
         return
 
     if message.from_user is not None:
-        log_user_start(message.from_user.id)
-
         # 🔹 İstifadəçi əlavə et (lokal JSON-a)
         try:
             add_user(
