@@ -113,6 +113,17 @@ def create_tables():
             )
         """)
         conn.execute("""
+            CREATE TABLE IF NOT EXISTS telegram_payments (
+                telegram_payment_charge_id TEXT PRIMARY KEY,
+                provider_payment_charge_id TEXT NOT NULL,
+                user_id BIGINT NOT NULL,
+                currency TEXT NOT NULL,
+                total_amount BIGINT NOT NULL,
+                rbcron_amount NUMERIC(12, 2) NOT NULL,
+                created_at TIMESTAMPTZ NOT NULL DEFAULT CURRENT_TIMESTAMP
+            )
+        """)
+        conn.execute("""
             CREATE TABLE IF NOT EXISTS user_activity (
                 id BIGSERIAL PRIMARY KEY,
                 user_id TEXT NOT NULL,
@@ -194,6 +205,54 @@ def award_quiz_reward(user_id: int, quiz_id: str, question_index: int, amount: D
                 "Quiz sualına düzgün cavab mükafatı",
                 "handlers.fast_test.answer_handler",
                 Jsonb({"quiz_id": quiz_id, "question_index": question_index}),
+            ),
+        )
+        return new_balance
+
+
+def credit_telegram_payment(
+    telegram_charge_id: str,
+    provider_charge_id: str,
+    user_id: int,
+    currency: str,
+    total_amount: int,
+    rbcron_amount: Decimal,
+):
+    rbcron_amount = Decimal(str(rbcron_amount)).quantize(Decimal("0.01"))
+    with get_db_connection() as conn:
+        payment = conn.execute(
+            """INSERT INTO telegram_payments
+               (telegram_payment_charge_id, provider_payment_charge_id, user_id, currency, total_amount, rbcron_amount)
+               VALUES (%s, %s, %s, %s, %s, %s)
+               ON CONFLICT (telegram_payment_charge_id) DO NOTHING
+               RETURNING telegram_payment_charge_id""",
+            (telegram_charge_id, provider_charge_id, user_id, currency, total_amount, rbcron_amount),
+        ).fetchone()
+        if not payment:
+            return None
+
+        row = conn.execute(
+            """INSERT INTO users (user_id, balance) VALUES (%s, %s)
+               ON CONFLICT (user_id) DO UPDATE
+               SET balance = users.balance + EXCLUDED.balance
+               RETURNING balance""",
+            (user_id, rbcron_amount),
+        ).fetchone()
+        new_balance = row["balance"]
+        previous_balance = new_balance - rbcron_amount
+        conn.execute(
+            """INSERT INTO balance_history
+               (user_id, ts, event_type, delta, prev_balance, new_balance, reason, source, meta)
+               VALUES (%s, CURRENT_TIMESTAMP::text, %s, %s, %s, %s, %s, %s, %s)""",
+            (
+                user_id,
+                "payment_credit",
+                rbcron_amount,
+                previous_balance,
+                new_balance,
+                "Telegram Payments ödənişi",
+                "handlers.payment.successful_payment_handler",
+                Jsonb({"telegram_charge_id": telegram_charge_id, "currency": currency, "total_amount": total_amount}),
             ),
         )
         return new_balance

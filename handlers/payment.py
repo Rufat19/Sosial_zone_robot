@@ -1,152 +1,131 @@
-from aiogram import Router, F
-from aiogram.types import Message, ContentType, CallbackQuery, InlineKeyboardMarkup, InlineKeyboardButton
-from aiogram.fsm.context import FSMContext
-from aiogram.filters import StateFilter
-from config import ADMIN_ID
-from database.db import get_db_connection
-from handlers.balance_utils import get_balance, set_balance, add_balance
+import logging
+from decimal import Decimal
+
+from aiogram import F, Router
+from aiogram.types import CallbackQuery, LabeledPrice, Message, PreCheckoutQuery
+
+from config import ADMIN_ID, PAYMENT_CURRENCY, PAYMENT_PROVIDER_TOKEN
+from database.db import credit_telegram_payment
 
 payment_router = Router()
+logger = logging.getLogger(__name__)
 
-async def send_receipt_to_admin(bot, user_id, photo_id):
-    keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="✅ Təsdiqlə", callback_data=f"payment_confirm_{user_id}"), InlineKeyboardButton(text="❌ Rədd et", callback_data=f"payment_reject_{user_id}")]
-        ]
-    )
-    # try to get user display info
-    display = None
+PAYMENT_PACKAGES = {
+    "5": (Decimal("5.00"), 500),
+    "20": (Decimal("20.00"), 1000),
+    "50": (Decimal("50.00"), 2000),
+}
+
+
+def _get_payment_details(payload: str):
+    parts = payload.split(":")
+    if len(parts) != 3 or parts[0] != "rbcron":
+        return None
     try:
-        user_obj = await bot.get_chat(user_id)
-        display = user_obj.full_name or getattr(user_obj, "username", None) or str(user_id)
-    except Exception:
-        display = str(user_id)
-
-    caption = (
-        f"📥 Yeni ödəniş qəbzi\n"
-        f"👤 İstifadəçi: {display} (id: {user_id})\n\n"
-        "🔹 Mövcud paketlər:\n"
-        "• 5 RBCron — $5\n"
-        "• 20 RBCron — $10\n"
-        "• 50 RBCron — $20\n\n"
-        "👉 Altındakı düymələrdən istifadə edərək təsdiq və ya rədd edin."
-    )
-    await bot.send_photo(
-        ADMIN_ID,
-        photo=photo_id,
-        caption=caption,
-        reply_markup=keyboard
-    )
-
-@payment_router.message(F.photo)
-async def payment_screenshot(message: Message):
-    # Yalnız şəxsi (private) mesajlarda ödəniş qəbul et
-    if message.chat.type != "private":
-        return  # Qruplarda şəkilləri ignore et
-    
-    if message.from_user is None:
-        await message.answer("Xəta baş verdi: istifadəçi məlumatı tapılmadı.")
-        return
-
-    user_id = message.from_user.id
-    caption = message.caption or "Naməlum məhsul"
-    
-    with get_db_connection() as conn:
-        conn.execute("""
-            INSERT INTO orders (user_id, name, phone, product_name, color, status)
-            VALUES (%s, %s, %s, %s, %s, %s)
-        """, (user_id, message.from_user.full_name, "Yox", caption, "Naməlum", "Ödəniş gözləyir"))
-        conn.commit()
-    
-    await message.answer("📥 Qəbz qəbul edildi! Admin tezliklə yoxlayacaq — sənə xəbər verəcəyik. 🙌")
-    if message.photo and len(message.photo) > 0:
-        await send_receipt_to_admin(message.bot, user_id, message.photo[-1].file_id)
-    else:
-        await message.answer("❗ Xəta: foto tapılmadı. Zəhmət olmasa qəbzin şəklini göndərin.")
-
-@payment_router.callback_query(F.data.startswith("payment_confirm_"))
-async def payment_confirm_callback(callback: CallbackQuery, state: FSMContext):
-    if callback.data is None:
-        if callback.message is not None:
-            await callback.message.answer("Xəta baş verdi: callback data tapılmadı.")
-        await callback.answer()
-        return
-    user_id = int(callback.data.split("_")[-1])
-    await state.set_state("waiting_manual_coin")
-    await state.update_data(manual_user_id=user_id)
-    if callback.message is not None:
-        await callback.message.answer("Coin sayını daxil edin:")
-    await callback.answer()
-
-@payment_router.message(StateFilter("waiting_manual_coin"))
-async def manual_coin_handler(message: Message, state: FSMContext):
-    data = await state.get_data()
-    manual_user_id = data.get("manual_user_id")
-    if manual_user_id is None:
-        await message.answer("Xəta baş verdi: istifadəçi ID tapılmadı.")
-        return
-    user_id = int(manual_user_id)
-    if message.text is None:
-        await message.answer("Xəta baş verdi: mesaj mətnini tapmaq olmadı.")
-        return
-    try:
-        coin_amount = int(message.text)
+        user_id = int(parts[1])
     except ValueError:
-        await message.answer("Yalnız rəqəm daxil edin!")
-        return
-    add_balance(user_id, coin_amount)
-    bot = getattr(message, "bot", None)
-    main_menu_keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="🏠 Əsas menyuya qayıt", callback_data="main_menu")]
-        ]
-    )
-    if bot is not None:
-        await bot.send_message(
-            user_id,
-            f"🎉 Ödəniş təsdiqləndi! Balansınıza +{coin_amount} RBCron əlavə olundu.\nYeni balans: {get_balance(user_id)} RBCron",
-            reply_markup=main_menu_keyboard
-        )
-        await message.answer(f"🎉 Təsdiqləndi və istifadəçiyə +{coin_amount} RBCron əlavə olundu.", reply_markup=main_menu_keyboard)
-    else:
-        await message.answer("Xəta baş verdi: bot instance tapılmadı.", reply_markup=main_menu_keyboard)
-    await state.clear()
+        return None
+    package = PAYMENT_PACKAGES.get(parts[2])
+    if package is None:
+        return None
+    return user_id, package
 
-@payment_router.callback_query(F.data.startswith("payment_reject_"))
-async def payment_reject_callback(callback: CallbackQuery, state: FSMContext):
-    if callback.data is None:
-        if callback.message is not None:
-            await callback.message.answer("Xəta baş verdi: callback data tapılmadı.")
-        await callback.answer()
+
+@payment_router.callback_query(F.data.startswith("buy_rbc_"))
+async def create_balance_invoice(callback: CallbackQuery):
+    if not PAYMENT_PROVIDER_TOKEN:
+        await callback.answer("Telegram ödəniş provayderi qurulmayıb.", show_alert=True)
         return
-    user_id = int(callback.data.split("_")[-1])
-    await state.set_state("waiting_payment_reject_reason")
-    await state.update_data(reject_user_id=user_id)
-    if callback.message is not None:
-        await callback.message.answer("Rədd səbəbini yazın:")
+    if callback.message is None or callback.data is None:
+        await callback.answer("Ödəniş sorğusu oxunmadı.", show_alert=True)
+        return
+
+    package_id = callback.data.rsplit("_", 1)[-1]
+    package = PAYMENT_PACKAGES.get(package_id)
+    if package is None:
+        await callback.answer("Seçilmiş paket tapılmadı.", show_alert=True)
+        return
+
+    rbcron_amount, price_minor_units = package
     await callback.answer()
-
-@payment_router.message(StateFilter("waiting_payment_reject_reason"))
-async def payment_reject_reason_handler(message: Message, state: FSMContext):
-    data = await state.get_data()
-    user_id = data.get("reject_user_id")
-    reason = message.text
-    main_menu_keyboard = InlineKeyboardMarkup(
-        inline_keyboard=[
-            [InlineKeyboardButton(text="🏠 Əsas menyuya qayıt", callback_data="main_menu")]
-        ]
+    await callback.message.answer_invoice(
+        title=f"{rbcron_amount:g} RBCron",
+        description=f"{rbcron_amount:g} RBCron balansınıza əlavə olunacaq.",
+        payload=f"rbcron:{callback.from_user.id}:{package_id}",
+        provider_token=PAYMENT_PROVIDER_TOKEN,
+        currency=PAYMENT_CURRENCY,
+        prices=[LabeledPrice(label=f"{rbcron_amount:g} RBCron", amount=price_minor_units)],
     )
-    if user_id is not None:
-        bot = message.bot
-        if bot is not None:
-            await bot.send_message(
-                user_id,
-                f"❌ Ödəniş admin tərəfindən rədd edildi.\nSəbəb: {reason}",
-                reply_markup=main_menu_keyboard
-            )
-            await message.answer("Rədd səbəbi istifadəçiyə göndərildi.", reply_markup=main_menu_keyboard)
-        else:
-            await message.answer("Xəta baş verdi: bot instance tapılmadı.", reply_markup=main_menu_keyboard)
-    else:
-        await message.answer("Xəta baş verdi: istifadəçi ID tapılmadı.", reply_markup=main_menu_keyboard)
-    await state.clear()
+
+
+@payment_router.pre_checkout_query()
+async def confirm_pre_checkout(query: PreCheckoutQuery):
+    details = _get_payment_details(query.invoice_payload)
+    if details is None:
+        await query.answer(ok=False, error_message="Ödəniş paketi etibarlı deyil.")
+        return
+
+    user_id, (rbcron_amount, price_minor_units) = details
+    if (
+        query.from_user.id != user_id
+        or query.currency != PAYMENT_CURRENCY
+        or query.total_amount != price_minor_units
+    ):
+        await query.answer(ok=False, error_message="Ödəniş məlumatları uyğun gəlmir.")
+        return
+
+    await query.answer(ok=True)
+
+
+@payment_router.message(F.successful_payment)
+async def successful_payment_handler(message: Message):
+    payment = message.successful_payment
+    user = message.from_user
+    details = _get_payment_details(payment.invoice_payload)
+
+    if user is None or details is None:
+        logger.error("Telegram ödənişinin payload məlumatı etibarsızdır.")
+        await message.answer("Ödəniş alındı, amma paket müəyyən edilmədi. Adminə müraciət edin.")
+        return
+
+    expected_user_id, (rbcron_amount, expected_total) = details
+    if (
+        user.id != expected_user_id
+        or payment.currency != PAYMENT_CURRENCY
+        or payment.total_amount != expected_total
+    ):
+        logger.error("Telegram ödənişinin istifadəçi və ya məbləğ məlumatı uyğun gəlmir.")
+        await message.answer("Ödəniş məlumatları təsdiqlənmədi. Adminə müraciət edin.")
+        return
+
+    try:
+        new_balance = credit_telegram_payment(
+            telegram_charge_id=payment.telegram_payment_charge_id,
+            provider_charge_id=payment.provider_payment_charge_id,
+            user_id=user.id,
+            currency=payment.currency,
+            total_amount=payment.total_amount,
+            rbcron_amount=rbcron_amount,
+        )
+    except Exception:
+        logger.exception("Uğurlu Telegram ödənişindən sonra balansı artırmaq alınmadı.")
+        if ADMIN_ID:
+            try:
+                await message.bot.send_message(
+                    ADMIN_ID,
+                    f"Balansı avtomatik artırmaq alınmadı. İstifadəçi: {user.id}; "
+                    f"Telegram ödəniş ID-si: {payment.telegram_payment_charge_id}",
+                )
+            except Exception:
+                logger.exception("Ödəniş xətası barədə adminə bildirmək alınmadı.")
+        await message.answer("Ödəniş təsdiqləndi, balansın yazılması yoxlanılır. Zəhmət olmasa gözləyin.")
+        return
+
+    if new_balance is None:
+        await message.answer("Bu ödəniş artıq balansa əlavə olunub.")
+        return
+
+    await message.answer(
+        f"✅ Ödəniş uğurla tamamlandı. Balansınıza {rbcron_amount:g} RBCron əlavə edildi.\n"
+        f"Yeni balansınız: {new_balance:.2f} RBCron"
+    )

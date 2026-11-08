@@ -10,7 +10,8 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # --- Əsas dəyişənlər ---
 BOT_TOKEN = os.getenv("BOT_TOKEN")
 ADMIN_ID = int(os.getenv("ADMIN_ID", 6520873307))  # .env-də olmasa, default
-CARD_NUMBER = os.getenv("CARD_NUMBER", "4098 5844 6547 4300")
+PAYMENT_PROVIDER_TOKEN = os.getenv("PAYMENT_PROVIDER_TOKEN")
+PAYMENT_CURRENCY = os.getenv("PAYMENT_CURRENCY", "USD").upper()
 
 # --- Versiya / informasiya ---
 APP_VERSION = os.getenv("APP_VERSION", "dev")

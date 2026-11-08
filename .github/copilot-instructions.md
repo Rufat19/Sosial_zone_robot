@@ -23,7 +23,7 @@ This file gives focused, actionable guidance to an AI coding agent editing or ex
 - Integration points & external dependencies:
   - Telegram Bot API via `aiogram` (v3). Handlers rely on aiogram Router/Dispatcher patterns.
   - Optional: `redis` is listed in requirements but not required for basic run; confirm usage before adding caching code.
-  - Payment and card config read from `config.py` (e.g., `CARD_NUMBER`).
+  - Telegram Payments provider credentials are read from environment variables in `config.py`; never commit provider tokens.
 
 - Common pitfalls & quick fixes observed in codebase:
   - `handlers/entry.py` may be empty — check for unused import attempts elsewhere before removing.

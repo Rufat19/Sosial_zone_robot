@@ -22,8 +22,9 @@ BOT_TOKEN=xxxx:yyyy
 ADMIN_ID=123456789
 APP_VERSION=dev
 REPO_NAME=Yeni_Repo
-CARD_NUMBER=0000 0000 0000 0000
 DATABASE_URL=postgresql://user:password@host:5432/database
+PAYMENT_PROVIDER_TOKEN=...
+PAYMENT_CURRENCY=USD
 ```
 
 3) İşə salma
@@ -37,7 +38,7 @@ python run.py
 
 - `/start` (şəxsi mesaj): əsas menyunu açır
 - “İnvestisiya xəbərləri” → başlıqlar siyahısı, oxu düyməsi
-- “Balans” → balans göstər/artır; qəbz fotosu adminə gedir, təsdiqdən sonra artırılır
+- “Balans” → paket seçib Telegram Payments ilə ödəniş etmək
 - İstifadəçi və bot mesajları 5 dəqiqədən sonra avtomatik silinir; qruplarda istifadəçi mesajlarını silmək üçün bot admin icazəsinə malik olmalıdır
 - `/clearall` (yalnız admin): təsdiqdən sonra botun məlumat cədvəllərini təmizləyir; miqrasiya qeydləri saxlanılır ki, köhnə məlumatlar yenidən import olunmasın
 
@@ -45,13 +46,13 @@ python run.py
 
 - Procfile: `worker: python run.py`
 - runtime.txt: `python-3.12`
-- Environment: `BOT_TOKEN`, `ADMIN_ID`, `DATABASE_URL`, opsional `APP_VERSION`, `REPO_NAME`, `CARD_NUMBER`
+- Environment: `BOT_TOKEN`, `ADMIN_ID`, `DATABASE_URL`, `PAYMENT_PROVIDER_TOKEN`, `PAYMENT_CURRENCY`, opsional `APP_VERSION`, `REPO_NAME`
 
 Addımlar:
 1. Repo GitHub-da hazır olsun
 2. Railway → New Project → Deploy from GitHub → bu repozitoriyanı seç
 3. Eyni Railway layihəsində PostgreSQL servisi əlavə et və onun bağlantı URL-ini bot servisində `DATABASE_URL` dəyişəni kimi qoş
-4. `BOT_TOKEN` və `ADMIN_ID` daxil olmaqla tələb olunan mühit dəyişənlərini əlavə et
+4. `BOT_TOKEN`, `ADMIN_ID` və BotFather-dən alınan `PAYMENT_PROVIDER_TOKEN` daxil olmaqla mühit dəyişənlərini əlavə et; tokeni repoya yazma
 5. Deploy — asılılıqlar avtomatik qurulacaq, worker prosesi işə düşəcək
 
 Qeydlər:
